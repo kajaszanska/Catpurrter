@@ -1,0 +1,8 @@
+{
+    "coins": 100,
+    "equippedHat": "cap",
+    "unlockedHats": [
+        "cap",
+        "crown"
+    ]
+}
