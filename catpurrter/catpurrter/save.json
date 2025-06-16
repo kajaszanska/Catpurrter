@@ -1,6 +1,6 @@
 {
     "coins": 100,
-    "equippedHat": "cap",
+    "equippedHat": "none",
     "unlockedHats": [
         "cap",
         "crown"
