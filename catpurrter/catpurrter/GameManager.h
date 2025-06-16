@@ -11,6 +11,11 @@ enum class GameState {
     StorageView,
     ShopView
 };
+struct ShopItem {
+    std::string name;
+    int cost;
+};
+
 
 class GameManager {
 public:
@@ -66,5 +71,21 @@ private:
     void initShopView();
     void renderShopView();
     void handleShopInput(sf::Keyboard::Key key);
+
+    struct ShopItem {
+        std::string name;
+        int cost;
+    };
+    std::vector<std::pair<std::string, int>> shopCatalog = {
+    { "cap", 100 },
+    { "crown", 200 },
+    { "wizard", 300 },
+    { "pirate", 10 }
+    };
+
+
+    std::vector<ShopItem> shopItems;
+    int shopSelectionIndex = 0;
+    std::vector<sf::Text> shopVisualItems; 
 
 };

@@ -76,8 +76,15 @@ void GameManager::processEvents() {
                 }
             }
             else if (state == GameState::ShopView) {
-                handleShopInput(event.key.code);
+                if (event.key.code == sf::Keyboard::Escape) {
+                    std::cout << "Leaving Shop\n";
+                    state = GameState::ComputerView;
+                }
+                else {
+                    handleShopInput(event.key.code);
+                }
             }
+
 
 
         }
@@ -318,18 +325,25 @@ void GameManager::initStorageView() {
     storageOptions.clear();
     storageSelectionIndex = 0;
 
-    float y = 200.0f;
+    float y = 200.f;
     for (const std::string& hat : playerData.unlockedHats) {
+        std::string label = hat;
+        if (hat == playerData.equippedHat) {
+            label += " (Equipped)";
+        }
+
         sf::Text text;
         text.setFont(font);
-        text.setString(hat);
+        text.setString(label);
         text.setCharacterSize(36);
         text.setFillColor(sf::Color::White);
-        text.setPosition(100.0f, y);
+        text.setPosition(100.f, y);
         storageOptions.push_back(text);
-        y += 50;
+
+        y += 50.f;
     }
 }
+
 
 void GameManager::renderStorageView() {
     for (size_t i = 0; i < storageOptions.size(); ++i) {
@@ -343,42 +357,142 @@ void GameManager::renderStorageView() {
 }
 
 void GameManager::handleStorageInput(sf::Keyboard::Key key) {
+    if (key == sf::Keyboard::Escape) {
+        std::cout << "Leaving Storage Rack\n";
+        state = GameState::RoomView;
+        return;
+    }
+
     if (storageOptions.empty()) return;
 
-    if (key == sf::Keyboard::Up || key == sf::Keyboard::W) {
-        if (storageSelectionIndex > 0)
-            storageSelectionIndex--;
+    if (key == sf::Keyboard::W || key == sf::Keyboard::Up) {
+        if (storageSelectionIndex > 0) storageSelectionIndex--;
     }
-    else if (key == sf::Keyboard::Down || key == sf::Keyboard::S) {
+    else if (key == sf::Keyboard::S || key == sf::Keyboard::Down) {
         if (storageSelectionIndex < static_cast<int>(storageOptions.size()) - 1)
             storageSelectionIndex++;
     }
     else if (key == sf::Keyboard::Enter) {
+        int previousIndex = storageSelectionIndex; 
+
         std::string selectedHat = playerData.unlockedHats[storageSelectionIndex];
         playerData.equippedHat = selectedHat;
         playerData.saveToFile("save.json");
+
         std::cout << "Equipped hat: " << selectedHat << "\n";
+
+        initStorageView(); 
+
+     
+        if (previousIndex >= static_cast<int>(storageOptions.size())) {
+            storageSelectionIndex = static_cast<int>(storageOptions.size()) - 1;
+        }
+        else {
+            storageSelectionIndex = previousIndex;
+        }
+    }
+
+
+}
+
+
+void GameManager::initShopView() {
+    shopItems.clear();
+    shopVisualItems.clear();
+    shopSelectionIndex = 0;
+
+    float y = 100.f;
+    for (const auto& hat : shopCatalog) {
+        std::string name = hat.first;
+        int price = hat.second;
+
+        shopItems.push_back({ name, price });
+
+        std::string label = name + " - " + std::to_string(price) + " coins";
+        if (std::find(playerData.unlockedHats.begin(), playerData.unlockedHats.end(), name) != playerData.unlockedHats.end()) {
+            label += " (Owned)";
+        }
+
+        sf::Text item;
+        item.setFont(font);
+        item.setString(label);
+        item.setCharacterSize(24);
+        item.setPosition(100.f, y);
+        item.setFillColor(sf::Color::White);
+        shopVisualItems.push_back(item);
+
+        y += 40.f;
+    }
+
+}
+
+
+void GameManager::renderShopView() {
+    sf::Text title;
+    title.setFont(font);
+    title.setString("Welcome to the Hat Shop!");
+    title.setCharacterSize(30);
+    title.setFillColor(sf::Color::Cyan);
+    title.setPosition(100.f, 30.f);
+    window.draw(title);
+
+    // Display player's current coins
+    sf::Text coinText;
+    coinText.setFont(font);
+    coinText.setString("Coins: " + std::to_string(playerData.coins));
+    coinText.setCharacterSize(24);
+    coinText.setFillColor(sf::Color::White);
+    coinText.setPosition(100.f, 70.f); 
+    window.draw(coinText);
+
+
+    // Draw visual items
+    for (size_t i = 0; i < shopVisualItems.size(); ++i) {
+        if (i == shopSelectionIndex)
+            shopVisualItems[i].setFillColor(sf::Color::Yellow);
+        else
+            shopVisualItems[i].setFillColor(sf::Color::White);
+
+        window.draw(shopVisualItems[i]);
     }
 }
 
-void GameManager::initShopView() {
-    std::cout << "[TODO] Initialize shop view\n";
-}
 
-void GameManager::renderShopView() {
-    // placeholder
-    sf::Text text;
-    text.setFont(font);
-    text.setString("Welcome to the Hat Shop!");
-    text.setCharacterSize(30);
-    text.setPosition(100, 100);
-    text.setFillColor(sf::Color::Cyan);
-    window.draw(text);
-}
 
 void GameManager::handleShopInput(sf::Keyboard::Key key) {
     if (key == sf::Keyboard::Escape) {
         std::cout << "Leaving Shop\n";
         state = GameState::ComputerView;
+        return;
+    }
+
+    if (shopItems.empty()) return;
+
+    if (key == sf::Keyboard::W || key == sf::Keyboard::Up) {
+        if (shopSelectionIndex > 0) shopSelectionIndex--;
+    }
+    else if (key == sf::Keyboard::S || key == sf::Keyboard::Down) {
+        if (shopSelectionIndex < static_cast<int>(shopItems.size()) - 1) shopSelectionIndex++;
+    }
+    else if (key == sf::Keyboard::Enter) {
+        std::string selectedHat = shopItems[shopSelectionIndex].name;
+        int hatCost = shopItems[shopSelectionIndex].cost;
+
+        // Check if already unlocked
+        if (std::find(playerData.unlockedHats.begin(), playerData.unlockedHats.end(), selectedHat) != playerData.unlockedHats.end()) {
+            std::cout << "Already owned: " << selectedHat << "\n";
+        }
+        else if (playerData.coins >= hatCost) {
+            // Buy and unlock
+            playerData.coins -= hatCost;
+            playerData.unlockedHats.push_back(selectedHat);
+            playerData.saveToFile("save.json");
+            std::cout << "Unlocked hat: " << selectedHat << " for " << hatCost << " coins\n";
+        }
+        else {
+            std::cout << "Not enough coins for: " << selectedHat << "\n";
+        }
+
     }
 }
+
