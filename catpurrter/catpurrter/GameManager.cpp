@@ -727,24 +727,87 @@ void GameManager::handleShopCategoryInput(sf::Keyboard::Key key) {
 
 
 void GameManager::initShelfShop() {
-   
+    shopVisualItems.clear();
+    shopSelectionIndex = 0;
+
+    float y = 150.f;
+    for (const auto& [name, cost] : shelfCatalog) {
+        sf::Text text;
+        text.setFont(font);
+
+        std::string label = name + " - " + std::to_string(cost) + " coins";
+
+        if (std::find(playerData.ownedDecorations.begin(), playerData.ownedDecorations.end(), name) != playerData.ownedDecorations.end()) {
+            label += " (Owned)";
+        }
+
+        text.setString(label);
+        text.setCharacterSize(28);
+        text.setFillColor(sf::Color::White);
+        text.setPosition(100.f, y);
+
+        shopVisualItems.push_back(text);
+        y += 40.f;
+    }
+
 }
+
 
 void GameManager::renderShelfShop() {
     sf::Text label;
     label.setFont(font);
-    label.setString("Shelf Decoration Shop - Coming Soon");
+    label.setString("Shelf Decoration Shop");
     label.setCharacterSize(30);
-    label.setFillColor(sf::Color::White);
-    label.setPosition(50, 50);
-    window.draw(label); 
+    label.setFillColor(sf::Color::Cyan);
+    label.setPosition(100, 30);
+    window.draw(label);
+
+    for (size_t i = 0; i < shopVisualItems.size(); ++i) {
+        sf::Text& text = shopVisualItems[i];
+        text.setFillColor(i == shopSelectionIndex ? sf::Color::Yellow : sf::Color::White);
+        window.draw(text);
+    }
 }
+
 
 
 
 void GameManager::handleShelfShopInput(sf::Keyboard::Key key) {
+    if (key == sf::Keyboard::Escape) {
+        std::cout << "Leaving Shelf Shop\n";
+        state = GameState::ShopCategoryView;
+        return;
+    }
 
+    if (shopVisualItems.empty()) return;
+
+    if (key == sf::Keyboard::Up || key == sf::Keyboard::W) {
+        if (shopSelectionIndex > 0)
+            shopSelectionIndex--;
+    }
+    else if (key == sf::Keyboard::Down || key == sf::Keyboard::S) {
+        if (shopSelectionIndex < static_cast<int>(shopVisualItems.size()) - 1)
+            shopSelectionIndex++;
+    }
+    else if (key == sf::Keyboard::Enter) {
+        const auto& [name, cost] = shelfCatalog[shopSelectionIndex];
+
+        if (std::find(playerData.ownedDecorations.begin(), playerData.ownedDecorations.end(), name) != playerData.ownedDecorations.end()) {
+            std::cout << "Already owned: " << name << "\n";
+        }
+        else if (playerData.coins >= cost) {
+            playerData.coins -= cost;
+            playerData.ownedDecorations.push_back(name);
+            playerData.saveToFile("save.json");
+            std::cout << "Purchased: " << name << " for " << cost << " coins\n";
+        }
+        else {
+            std::cout << "Not enough coins for: " << name << "\n";
+        }
+    }
 }
+
+
 
 void GameManager::initMiniGameShop() {
     std::cout << "[Mini Game Shop Initialized]\n";
