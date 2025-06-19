@@ -242,7 +242,6 @@ void GameManager::renderRoomView() {
     roomText.setFillColor(sf::Color::Cyan);
     window.draw(roomText);
 
-    // Draw interactable items
     for (const auto& obj : roomObjects) {
         window.draw(obj);
     }
@@ -259,7 +258,7 @@ void GameManager::updateStartMenu() {
 
 
 void GameManager::updateRoomView() {
-    // Nothing yet — placeholder for future
+
 }
 
 void GameManager::initRoomObjects() {
@@ -390,7 +389,7 @@ void GameManager::handleComputerInput(sf::Keyboard::Key key) {
 
         else if (selected == "Mini Game") {
             state = GameState::MiniGame;
-            initMiniGame();  // make sure this exists
+            initMiniGame();  
         }
         else if (selected == "Back") {
             state = GameState::RoomView;
@@ -475,7 +474,7 @@ void GameManager::handleStorageInput(sf::Keyboard::Key key) {
 
 
 void GameManager::initHatShopView() {
-    shopItems.clear();
+    hatShopItems.clear();
     shopVisualItems.clear();
     shopSelectionIndex = 0;
 
@@ -484,7 +483,7 @@ void GameManager::initHatShopView() {
         std::string name = hat.first;
         int price = hat.second;
 
-        shopItems.push_back({ name, price });
+        hatShopItems.push_back({ name, price });
 
         std::string label = name + " - " + std::to_string(price) + " coins";
         if (std::find(playerData.unlockedHats.begin(), playerData.unlockedHats.end(), name) != playerData.unlockedHats.end()) {
@@ -506,25 +505,11 @@ void GameManager::initHatShopView() {
 
 
 void GameManager::renderHatShopView() {
-    sf::Text title;
-    title.setFont(font);
-    title.setString("Welcome to the Hat Shop!");
-    title.setCharacterSize(30);
-    title.setFillColor(sf::Color::Cyan);
-    title.setPosition(100.f, 30.f);
-    window.draw(title);
 
-    // Display player's current coins
-    sf::Text coinText;
-    coinText.setFont(font);
-    coinText.setString("Coins: " + std::to_string(playerData.coins));
-    coinText.setCharacterSize(24);
-    coinText.setFillColor(sf::Color::White);
-    coinText.setPosition(100.f, 70.f); 
-    window.draw(coinText);
+    drawSectionTitle("Hat Shop");
+    drawCoinDisplay();
 
 
-    // Draw visual items
     for (size_t i = 0; i < shopVisualItems.size(); ++i) {
         if (i == shopSelectionIndex)
             shopVisualItems[i].setFillColor(sf::Color::Yellow);
@@ -544,17 +529,17 @@ void GameManager::handleHatShopInput(sf::Keyboard::Key key) {
         return;
     }
 
-    if (shopItems.empty()) return;
+    if (hatShopItems.empty()) return;
 
     if (key == sf::Keyboard::W || key == sf::Keyboard::Up) {
         if (shopSelectionIndex > 0) shopSelectionIndex--;
     }
     else if (key == sf::Keyboard::S || key == sf::Keyboard::Down) {
-        if (shopSelectionIndex < static_cast<int>(shopItems.size()) - 1) shopSelectionIndex++;
+        if (shopSelectionIndex < static_cast<int>(hatShopItems.size()) - 1) shopSelectionIndex++;
     }
     else if (key == sf::Keyboard::Enter) {
-        std::string selectedHat = shopItems[shopSelectionIndex].name;
-        int hatCost = shopItems[shopSelectionIndex].cost;
+        std::string selectedHat = hatShopItems[shopSelectionIndex].name;
+        int hatCost = hatShopItems[shopSelectionIndex].cost;
 
         // Check if already unlocked
         if (std::find(playerData.unlockedHats.begin(), playerData.unlockedHats.end(), selectedHat) != playerData.unlockedHats.end()) {
@@ -769,13 +754,10 @@ void GameManager::initShelfShop() {
 
 
 void GameManager::renderShelfShop() {
-    sf::Text label;
-    label.setFont(font);
-    label.setString("Shelf Decoration Shop");
-    label.setCharacterSize(30);
-    label.setFillColor(sf::Color::Cyan);
-    label.setPosition(100, 30);
-    window.draw(label);
+
+    drawSectionTitle("Shelf Shop");
+    drawCoinDisplay();
+
 
     for (size_t i = 0; i < shopVisualItems.size(); ++i) {
         sf::Text& text = shopVisualItems[i];
@@ -871,13 +853,11 @@ void GameManager::initFishTankShop() {
 
 
 void GameManager::renderFishTankShop() {
-    sf::Text label;
-    label.setFont(font);
-    label.setString("Fish Tank Shop");
-    label.setCharacterSize(30);
-    label.setFillColor(sf::Color::Cyan);
-    label.setPosition(100.f, 30.f);
-    window.draw(label);
+   
+
+    drawSectionTitle("Fish Tank Shop");
+    drawCoinDisplay();
+
 
     for (size_t i = 0; i < fishTankShopItems.size(); ++i) {
         fishTankShopItems[i].setFillColor(i == fishTankShopSelectionIndex ? sf::Color::Yellow : sf::Color::White);
@@ -954,3 +934,22 @@ void GameManager::handleAquariumInput(sf::Keyboard::Key key) {
     }
 }
 
+void GameManager::drawCoinDisplay() {
+    sf::Text coinText;
+    coinText.setFont(font);
+    coinText.setString("Coins: " + std::to_string(playerData.coins));
+    coinText.setCharacterSize(24);
+    coinText.setFillColor(sf::Color::White);
+    coinText.setPosition(100.f, 70.f);
+    window.draw(coinText);
+}
+
+void GameManager::drawSectionTitle(const std::string& title) {
+    sf::Text titleText;
+    titleText.setFont(font);
+    titleText.setString(title);
+    titleText.setCharacterSize(36);
+    titleText.setFillColor(sf::Color::White);
+    titleText.setPosition(100.f, 20.f); 
+    window.draw(titleText);
+}

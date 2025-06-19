@@ -3,14 +3,16 @@
         "Goldfish",
         "Aquatic Plant"
     ],
-    "coins": 850,
-    "equippedHat": "cap",
+    "coins": 400,
+    "equippedHat": "crown",
     "ownedDecorations": [
-        "Plant"
+        "Plant",
+        "Figure"
     ],
     "shelfContents": [],
     "unlockedHats": [
         "cap",
-        "crown"
+        "crown",
+        "wizard"
     ]
 }

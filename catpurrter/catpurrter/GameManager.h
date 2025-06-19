@@ -113,7 +113,7 @@ private:
 
 
 
-    std::vector<ShopItem> shopItems;
+    std::vector<ShopItem> hatShopItems;
     int shopSelectionIndex = 0;
     std::vector<sf::Text> shopVisualItems; 
 
@@ -136,8 +136,6 @@ private:
     void renderShopCategoryView();
     void handleShopCategoryInput(sf::Keyboard::Key key);
 
-    std::vector<ShopItem> shelfShopItems;
-
     void initShelfShop();
     void renderShelfShop();
     void handleShelfShopInput(sf::Keyboard::Key key);
@@ -153,5 +151,9 @@ private:
     void initAquariumView();
     void renderAquariumView();
     void handleAquariumInput(sf::Keyboard::Key key);
+
+    void drawCoinDisplay();
+    void drawSectionTitle(const std::string& title);
+
 
 };
