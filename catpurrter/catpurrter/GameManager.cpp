@@ -475,16 +475,14 @@ void GameManager::handleStorageInput(sf::Keyboard::Key key) {
 
 
 void GameManager::initHatShopView() {
-    hatShopItems.clear();
+    int previousIndex = shopSelectionIndex;  
+
     shopVisualItems.clear();
-    shopSelectionIndex = 0;
 
     float y = 100.f;
     for (const auto& hat : hatCatalog) {
         std::string name = hat.first;
         int price = hat.second;
-
-        hatShopItems.push_back({ name, price });
 
         std::string label = name + " - " + std::to_string(price) + " coins";
         if (std::find(playerData.unlockedHats.begin(), playerData.unlockedHats.end(), name) != playerData.unlockedHats.end()) {
@@ -502,7 +500,15 @@ void GameManager::initHatShopView() {
         y += 40.f;
     }
 
+    if (!shopVisualItems.empty()) {
+        shopSelectionIndex = std::min(previousIndex, static_cast<int>(shopVisualItems.size()) - 1);
+    }
+    else {
+        shopSelectionIndex = 0;
+    }
 }
+
+
 
 
 void GameManager::renderHatShopView() {
@@ -530,13 +536,13 @@ void GameManager::handleHatShopInput(sf::Keyboard::Key key) {
         return;
     }
 
-    if (hatShopItems.empty()) return;
+    if (hatCatalog.empty()) return;
 
-    handleShopNavigationInput(key, shopSelectionIndex, hatShopItems);
+    handleShopNavigationInput(key, shopSelectionIndex, hatCatalog);
 
     if (key == sf::Keyboard::Enter) {
-        std::string selectedHat = hatShopItems[shopSelectionIndex].name;
-        int hatCost = hatShopItems[shopSelectionIndex].cost;
+        std::string selectedHat = hatCatalog[shopSelectionIndex].first;
+        int hatCost = hatCatalog[shopSelectionIndex].second;
 
         // Check if already unlocked
         if (std::find(playerData.unlockedHats.begin(), playerData.unlockedHats.end(), selectedHat) != playerData.unlockedHats.end()) {

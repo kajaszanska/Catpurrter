@@ -4,7 +4,7 @@
         "Aquatic Plant",
         "Bubble Toy"
     ],
-    "coins": 90,
+    "coins": 9490,
     "equippedHat": "crown",
     "ownedDecorations": [
         "Plant",
@@ -14,8 +14,8 @@
     "shelfContents": [],
     "unlockedHats": [
         "cap",
-        "crown",
         "wizard",
-        "pirate"
+        "pirate",
+        "crown"
     ]
 }

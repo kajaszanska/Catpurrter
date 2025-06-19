@@ -19,11 +19,6 @@ enum class GameState {
     MiniGame
 };
 
-struct ShopItem {
-    std::string name;
-    int cost;
-};
-
 
 class GameManager {
 public:
@@ -115,9 +110,6 @@ private:
     void renderShelfView();
     void handleShelfInput(sf::Keyboard::Key key);
 
-
-
-    std::vector<ShopItem> hatShopItems;
     int shopSelectionIndex = 0;
     std::vector<sf::Text> shopVisualItems; 
 
