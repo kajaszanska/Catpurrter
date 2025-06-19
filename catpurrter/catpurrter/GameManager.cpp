@@ -646,23 +646,27 @@ void GameManager::initShopCategoryView() {
     shopCategoryOptions.clear();
     shopCategoryIndex = 0;
 
-    std::vector<std::string> categories = {
-        "Hat Shop",
-        "Shelf Decorations",
-        "Fish Tank Items",
-        "Mini Games"
+    std::vector<std::pair<std::string, ShopCategory>> categories = {
+        { "Hat Shop", ShopCategory::Hat },
+        { "Shelf Decorations", ShopCategory::Shelf },
+        { "Fish Tank Items", ShopCategory::FishTank },
+        { "Mini Games", ShopCategory::MiniGame }
     };
 
-    for (size_t i = 0; i < categories.size(); ++i) {
+    float y = 100.f;
+    for (const auto& entry : categories) {
         sf::Text text;
         text.setFont(font);
-        text.setString(categories[i]);
-        text.setCharacterSize(24);
-        text.setFillColor(i == 0 ? sf::Color::Yellow : sf::Color::White);
-        text.setPosition(100, 100 + i * 40);  
-        shopCategoryOptions.push_back(text);
+        text.setString(entry.first);
+        text.setCharacterSize(30);
+        text.setFillColor(sf::Color::White);
+        text.setPosition(100.f, y);
+
+        shopCategoryOptions.push_back({ text, entry.second });
+        y += 50.f;
     }
 }
+
 
 void GameManager::renderShopCategoryView() {
     sf::Text title;
@@ -674,20 +678,20 @@ void GameManager::renderShopCategoryView() {
     window.draw(title);
 
     for (size_t i = 0; i < shopCategoryOptions.size(); ++i) {
-        if (i == shopCategoryIndex)
-            shopCategoryOptions[i].setFillColor(sf::Color::Yellow);
-        else
-            shopCategoryOptions[i].setFillColor(sf::Color::White);
-
-        window.draw(shopCategoryOptions[i]);
+        sf::Text& text = shopCategoryOptions[i].first;
+        text.setFillColor(i == shopCategoryIndex ? sf::Color::Yellow : sf::Color::White);
+        window.draw(text);
     }
 }
+
 void GameManager::handleShopCategoryInput(sf::Keyboard::Key key) {
     if (key == sf::Keyboard::Escape) {
         std::cout << "Leaving Shop Category\n";
         state = GameState::ComputerView;
         return;
     }
+
+    if (shopCategoryOptions.empty()) return;
 
     if (key == sf::Keyboard::W || key == sf::Keyboard::Up) {
         if (shopCategoryIndex > 0) shopCategoryIndex--;
@@ -697,33 +701,30 @@ void GameManager::handleShopCategoryInput(sf::Keyboard::Key key) {
             shopCategoryIndex++;
     }
     else if (key == sf::Keyboard::Enter) {
-        std::string selected = shopCategoryOptions[shopCategoryIndex].getString();
+        ShopCategory selected = shopCategoryOptions[shopCategoryIndex].second;
+        std::cout << "Selected category enum: " << static_cast<int>(selected) << "\n";
 
-        if (selected == "Hat Shop") {
-            std::cout << "Selected: Hat Shop\n";
+        switch (selected) {
+        case ShopCategory::Hat:
             state = GameState::HatShop;
             initHatShopView();
-        }
-        else if (selected == "Shelf Decorations") {
-            std::cout << "Selected: Shelf Decorations\n";
+            break;
+        case ShopCategory::Shelf:
             state = GameState::ShelfShop;
             initShelfShop();
-        }
-        else if (selected == "Fish Tank Items") {
-            std::cout << "Selected: Fish Tank Items\n";
+            break;
+        case ShopCategory::FishTank:
             state = GameState::FishTankShop;
             initFishTankShop();
-        }
-        else if (selected == "Mini Games") {
-            std::cout << "Selected: Mini Games\n";
+            break;
+        case ShopCategory::MiniGame:
             state = GameState::MiniGameShop;
             initMiniGameShop();
+            break;
         }
-
-
     }
-
 }
+
 
 void GameManager::initShelfShop() {
    

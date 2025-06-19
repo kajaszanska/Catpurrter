@@ -79,10 +79,6 @@ private:
     void renderHatShopView();
     void handleHatShopInput(sf::Keyboard::Key key);
 
-    struct ShopItem {
-        std::string name;
-        int cost;
-    };
     std::vector<std::pair<std::string, int>> shopCatalog = {
     { "cap", 100 },
     { "crown", 200 },
@@ -113,8 +109,16 @@ private:
     void renderMiniGame();
     void handleMiniGameInput(sf::Keyboard::Key key);
 
-    std::vector<sf::Text> shopCategoryOptions;
+    enum class ShopCategory {
+        Hat,
+        Shelf,
+        FishTank,
+        MiniGame
+    };
+
+    std::vector<std::pair<sf::Text, ShopCategory>> shopCategoryOptions;
     int shopCategoryIndex = 0;
+
 
     void initShopCategoryView();
     void renderShopCategoryView();
