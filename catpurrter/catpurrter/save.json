@@ -1,8 +1,9 @@
 {
     "aquariumContents": [
-        "Goldfish"
+        "Goldfish",
+        "Aquatic Plant"
     ],
-    "coins": 1000,
+    "coins": 850,
     "equippedHat": "cap",
     "ownedDecorations": [
         "Plant"

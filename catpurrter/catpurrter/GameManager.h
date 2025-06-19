@@ -15,6 +15,7 @@ enum class GameState {
     ShelfShop,
     FishTankShop,
     MiniGameShop,
+    AquariumView,
     MiniGame
 };
 
@@ -149,5 +150,8 @@ private:
     void renderMiniGameShop();
     void handleMiniGameShopInput(sf::Keyboard::Key key);
 
+    void initAquariumView();
+    void renderAquariumView();
+    void handleAquariumInput(sf::Keyboard::Key key);
 
 };

@@ -114,12 +114,17 @@ void GameManager::processEvents() {
                     handleShelfShopInput(event.key.code);
                 }
             }
+            else if (state == GameState::AquariumView) {
+                handleAquariumInput(event.key.code);
+            }
 
-            else if (state == GameState::FishTankShop)
+
+            else if (state == GameState::FishTankShop) {
                 handleFishTankShopInput(event.key.code);
-            else if (state == GameState::MiniGameShop)
+            }
+            else if (state == GameState::MiniGameShop) {
                 handleMiniGameShopInput(event.key.code);
-
+            }
         }
     }
 }
@@ -159,6 +164,9 @@ void GameManager::render() {
         renderFishTankShop();
     else if (state == GameState::MiniGameShop)
         renderMiniGameShop();
+    else if (state == GameState::AquariumView)
+        renderAquariumView();
+
 
 
 
@@ -307,6 +315,12 @@ void GameManager::handleRoomInput(sf::Keyboard::Key key) {
             std::cout << "Entered Shelf View\n";
             state = GameState::ShelfView;
             initShelfView();
+        }
+        else if (selected == "Aquarium") {
+            std::cout << "Entered Aquarium View\n";
+            state = GameState::AquariumView;
+            initAquariumView();
+
         }
 
 
@@ -904,6 +918,39 @@ void GameManager::handleFishTankShopInput(sf::Keyboard::Key key) {
         else {
             std::cout << "Not enough coins for: " << name << "\n";
         }
+    }
+}
+
+void GameManager::initAquariumView() {
+    std::cout << "Entered Aquarium View\n";
+}
+
+void GameManager::renderAquariumView() {
+    sf::Text title;
+    title.setFont(font);
+    title.setString("Aquarium View");
+    title.setCharacterSize(30);
+    title.setFillColor(sf::Color::Cyan);
+    title.setPosition(100.f, 30.f);
+    window.draw(title);
+
+    float y = 100.f;
+    for (const auto& item : playerData.aquariumContents) {
+        sf::Text text;
+        text.setFont(font);
+        text.setString(item);
+        text.setCharacterSize(24);
+        text.setFillColor(sf::Color::White);
+        text.setPosition(100.f, y);
+        window.draw(text);
+        y += 40.f;
+    }
+}
+
+void GameManager::handleAquariumInput(sf::Keyboard::Key key) {
+    if (key == sf::Keyboard::Escape) {
+        std::cout << "Leaving Aquarium View\n";
+        state = GameState::RoomView;
     }
 }
 
