@@ -1,6 +1,12 @@
 {
+    "aquariumContents": [],
     "coins": 90,
-    "equippedHat": "pirate",
+    "equippedHat": "cap",
+    "ownedDecorations": [
+        "Plant",
+        "Photo"
+    ],
+    "shelfContents": [],
     "unlockedHats": [
         "cap",
         "crown",

@@ -75,23 +75,54 @@ void GameManager::processEvents() {
                     handleStorageInput(event.key.code);  
                 }
             }
-            else if (state == GameState::ShopView) {
+            else if (state == GameState::HatShop) {
                 if (event.key.code == sf::Keyboard::Escape) {
-                    std::cout << "Leaving Shop\n";
+                    std::cout << "Leaving Hat Shop\n";
+                    state = GameState::ShopCategoryView;
+                }
+                else {
+                    handleHatShopInput(event.key.code);
+                }
+            }
+            else if (state == GameState::MiniGame) {
+                handleMiniGameInput(event.key.code);
+            }
+            else if (state == GameState::ShelfView) {
+                if (event.key.code == sf::Keyboard::Escape) {
+                    std::cout << "Leaving Shelves\n";
+                    state = GameState::RoomView;
+                }
+                else {
+                    handleShelfInput(event.key.code);
+                }
+            }
+            else if (state == GameState::ShopCategoryView) {
+                if (event.key.code == sf::Keyboard::Escape) {
+                    std::cout << "Leaving Shop Category\n";
                     state = GameState::ComputerView;
                 }
                 else {
-                    handleShopInput(event.key.code);
+                    handleShopCategoryInput(event.key.code);
+                }
+            }
+            else if (state == GameState::ShelfShop) {
+                if (event.key.code == sf::Keyboard::Escape) {
+                    std::cout << "Exited Shelf Shop\n";
+                    state = GameState::ShopCategoryView;
+                }
+                else {
+                    handleShelfShopInput(event.key.code);
                 }
             }
 
-
+            else if (state == GameState::FishTankShop)
+                handleFishTankShopInput(event.key.code);
+            else if (state == GameState::MiniGameShop)
+                handleMiniGameShopInput(event.key.code);
 
         }
     }
 }
-
-
 
 void GameManager::update() {
     if (state == GameState::StartMenu)
@@ -114,13 +145,26 @@ void GameManager::render() {
         renderComputerView();
     else if (state == GameState::StorageView)
         renderStorageView();
-    else if (state == GameState::ShopView) {
-        renderShopView();
-    }
+    else if (state == GameState::HatShop)
+        renderHatShopView();
+    else if (state == GameState::MiniGame)
+        renderMiniGame();
+    else if (state == GameState::ShelfView)
+        renderShelfView();
+    else if (state == GameState::ShopCategoryView)
+        renderShopCategoryView();
+    else if (state == GameState::ShelfShop)
+        renderShelfShop();
+    else if (state == GameState::FishTankShop)
+        renderFishTankShop();
+    else if (state == GameState::MiniGameShop)
+        renderMiniGameShop();
+
 
 
     window.display();
 }
+
 
 void GameManager::moveUp() {
     if (menuItems.empty()) return; 
@@ -259,6 +303,12 @@ void GameManager::handleRoomInput(sf::Keyboard::Key key) {
             state = GameState::StorageView;
             initStorageView(); 
         }
+        else if (selected == "Shelves") {
+            std::cout << "Entered Shelf View\n";
+            state = GameState::ShelfView;
+            initShelfView();
+        }
+
 
     }
 
@@ -268,18 +318,20 @@ void GameManager::initComputerView() {
     computerOptions.clear();
     computerSelectionIndex = 0;
 
-    std::vector<std::string> labels = { "Shop", "MiniGames", "Back" };
+    std::vector<std::string> labels = { "Shop", "Mini Game", "Back" };
 
     for (size_t i = 0; i < labels.size(); ++i) {
         sf::Text text;
         text.setFont(font);
         text.setString(labels[i]);
         text.setCharacterSize(28);
-        text.setPosition(200.f + i * 180.f, 400.f);
+        text.setPosition(200.f, i * 60.f + 300.f);  
         text.setFillColor(i == computerSelectionIndex ? sf::Color::Yellow : sf::Color::White);
         computerOptions.push_back(text);
     }
 }
+
+
 
 void GameManager::renderComputerView() {
     sf::Text title("Computer Apps", font, 32);
@@ -298,28 +350,40 @@ void GameManager::updateComputerView() {
     }
 }
 void GameManager::handleComputerInput(sf::Keyboard::Key key) {
-    if ((key == sf::Keyboard::A || key == sf::Keyboard::Left) && computerSelectionIndex > 0) {
-        computerSelectionIndex--;
-    }
-    if ((key == sf::Keyboard::D || key == sf::Keyboard::Right) && computerSelectionIndex < static_cast<int>(computerOptions.size()) - 1) {
-        computerSelectionIndex++;
+    if (key == sf::Keyboard::Escape) {
+        std::cout << "Closed Computer\n";
+        state = GameState::RoomView;
+        return;
     }
 
-    if (key == sf::Keyboard::Enter) {
-        std::string selected = computerOptions[computerSelectionIndex].getString().toAnsiString();
+    if (computerOptions.empty()) return;
+
+    if (key == sf::Keyboard::Up || key == sf::Keyboard::W) {
+        if (computerSelectionIndex > 0) computerSelectionIndex--;
+    }
+    else if (key == sf::Keyboard::Down || key == sf::Keyboard::S) {
+        if (computerSelectionIndex < static_cast<int>(computerOptions.size()) - 1)
+            computerSelectionIndex++;
+    }
+    else if (key == sf::Keyboard::Enter) {
+        std::string selected = computerOptions[computerSelectionIndex].getString();
         std::cout << "Selected Computer Option: " << selected << "\n";
 
-        if (selected == "Back") {
+        if (selected == "Shop") {
+            state = GameState::ShopCategoryView;
+            initShopCategoryView();
+        }
+
+        else if (selected == "Mini Game") {
+            state = GameState::MiniGame;
+            initMiniGame();  // make sure this exists
+        }
+        else if (selected == "Back") {
             state = GameState::RoomView;
         }
-        else if (selected == "Shop") {
-            std::cout << "Opened Shop\n";
-            state = GameState::ShopView;
-            initShopView();
-        }
-        // Later: add Shop or MiniGames logic here
     }
 }
+
 
 void GameManager::initStorageView() {
     storageOptions.clear();
@@ -396,7 +460,7 @@ void GameManager::handleStorageInput(sf::Keyboard::Key key) {
 }
 
 
-void GameManager::initShopView() {
+void GameManager::initHatShopView() {
     shopItems.clear();
     shopVisualItems.clear();
     shopSelectionIndex = 0;
@@ -427,7 +491,7 @@ void GameManager::initShopView() {
 }
 
 
-void GameManager::renderShopView() {
+void GameManager::renderHatShopView() {
     sf::Text title;
     title.setFont(font);
     title.setString("Welcome to the Hat Shop!");
@@ -459,7 +523,7 @@ void GameManager::renderShopView() {
 
 
 
-void GameManager::handleShopInput(sf::Keyboard::Key key) {
+void GameManager::handleHatShopInput(sf::Keyboard::Key key) {
     if (key == sf::Keyboard::Escape) {
         std::cout << "Leaving Shop\n";
         state = GameState::ComputerView;
@@ -496,3 +560,229 @@ void GameManager::handleShopInput(sf::Keyboard::Key key) {
     }
 }
 
+void GameManager::initMiniGame() {
+    std::cout << "[Mini Game Initialized]\n";
+}
+
+void GameManager::renderMiniGame() {
+    sf::Text text;
+    text.setFont(font);
+    text.setString("Mini Game Coming Soon! Press ESC to return.");
+    text.setCharacterSize(30);
+    text.setFillColor(sf::Color::White);
+    text.setPosition(100.f, 200.f);
+    window.draw(text);
+}
+
+void GameManager::handleMiniGameInput(sf::Keyboard::Key key) {
+    if (key == sf::Keyboard::Escape) {
+        std::cout << "Exiting Mini Game\n";
+        state = GameState::ComputerView;
+    }
+}
+
+void GameManager::initShelfView() {
+    shelfOptions.clear();
+    shelfSelectionIndex = 0;
+
+    float y = 200.f;
+    for (const std::string& item : playerData.ownedDecorations) {
+        sf::Text text;
+        text.setFont(font);
+        text.setString(item);
+        text.setCharacterSize(30);
+        text.setFillColor(sf::Color::White);
+        text.setPosition(100.f, y);
+        shelfOptions.push_back(text);
+        y += 50.f;
+    }
+}
+
+
+void GameManager::renderShelfView() {
+    sf::Text title;
+    title.setFont(font);
+    title.setString("Shelf Decorations");
+    title.setCharacterSize(30);
+    title.setFillColor(sf::Color::Cyan);
+    title.setPosition(100.f, 30.f);
+    window.draw(title);
+
+
+    for (size_t i = 0; i < shelfOptions.size(); ++i) {
+        if (i == shelfSelectionIndex)
+            shelfOptions[i].setFillColor(sf::Color::Yellow);
+        else
+            shelfOptions[i].setFillColor(sf::Color::White);
+
+        window.draw(shelfOptions[i]);
+    }
+}
+
+void GameManager::handleShelfInput(sf::Keyboard::Key key) {
+    if (key == sf::Keyboard::Escape) {
+        std::cout << "Leaving Shelf View\n";
+        state = GameState::RoomView;
+        return;
+    }
+
+    if (shelfOptions.empty()) return;
+
+    if (key == sf::Keyboard::W || key == sf::Keyboard::Up) {
+        if (shelfSelectionIndex > 0)
+            shelfSelectionIndex--;
+    }
+    else if (key == sf::Keyboard::S || key == sf::Keyboard::Down) {
+        if (shelfSelectionIndex < static_cast<int>(shelfOptions.size()) - 1)
+            shelfSelectionIndex++;
+    }
+    else if (key == sf::Keyboard::Enter) {
+        std::string selected = playerData.ownedDecorations[shelfSelectionIndex];
+        std::cout << "Selected decoration: " << selected << "\n";
+    }
+}
+
+void GameManager::initShopCategoryView() {
+    shopCategoryOptions.clear();
+    shopCategoryIndex = 0;
+
+    std::vector<std::string> categories = {
+        "Hat Shop",
+        "Shelf Decorations",
+        "Fish Tank Items",
+        "Mini Games"
+    };
+
+    for (size_t i = 0; i < categories.size(); ++i) {
+        sf::Text text;
+        text.setFont(font);
+        text.setString(categories[i]);
+        text.setCharacterSize(24);
+        text.setFillColor(i == 0 ? sf::Color::Yellow : sf::Color::White);
+        text.setPosition(100, 100 + i * 40);  
+        shopCategoryOptions.push_back(text);
+    }
+}
+
+void GameManager::renderShopCategoryView() {
+    sf::Text title;
+    title.setFont(font);
+    title.setString("Shop Categories");
+    title.setCharacterSize(30);
+    title.setFillColor(sf::Color::Cyan);
+    title.setPosition(100.f, 30.f);
+    window.draw(title);
+
+    for (size_t i = 0; i < shopCategoryOptions.size(); ++i) {
+        if (i == shopCategoryIndex)
+            shopCategoryOptions[i].setFillColor(sf::Color::Yellow);
+        else
+            shopCategoryOptions[i].setFillColor(sf::Color::White);
+
+        window.draw(shopCategoryOptions[i]);
+    }
+}
+void GameManager::handleShopCategoryInput(sf::Keyboard::Key key) {
+    if (key == sf::Keyboard::Escape) {
+        std::cout << "Leaving Shop Category\n";
+        state = GameState::ComputerView;
+        return;
+    }
+
+    if (key == sf::Keyboard::W || key == sf::Keyboard::Up) {
+        if (shopCategoryIndex > 0) shopCategoryIndex--;
+    }
+    else if (key == sf::Keyboard::S || key == sf::Keyboard::Down) {
+        if (shopCategoryIndex < static_cast<int>(shopCategoryOptions.size()) - 1)
+            shopCategoryIndex++;
+    }
+    else if (key == sf::Keyboard::Enter) {
+        std::string selected = shopCategoryOptions[shopCategoryIndex].getString();
+
+        if (selected == "Hat Shop") {
+            std::cout << "Selected: Hat Shop\n";
+            state = GameState::HatShop;
+            initHatShopView();
+        }
+        else if (selected == "Shelf Decorations") {
+            std::cout << "Selected: Shelf Decorations\n";
+            state = GameState::ShelfShop;
+            initShelfShop();
+        }
+        else if (selected == "Fish Tank Items") {
+            std::cout << "Selected: Fish Tank Items\n";
+            state = GameState::FishTankShop;
+            initFishTankShop();
+        }
+        else if (selected == "Mini Games") {
+            std::cout << "Selected: Mini Games\n";
+            state = GameState::MiniGameShop;
+            initMiniGameShop();
+        }
+
+
+    }
+
+}
+
+void GameManager::initShelfShop() {
+   
+}
+
+void GameManager::renderShelfShop() {
+    sf::Text label;
+    label.setFont(font);
+    label.setString("Shelf Decoration Shop - Coming Soon");
+    label.setCharacterSize(30);
+    label.setFillColor(sf::Color::White);
+    label.setPosition(50, 50);
+    window.draw(label); 
+}
+
+
+
+void GameManager::handleShelfShopInput(sf::Keyboard::Key key) {
+
+}
+
+void GameManager::initMiniGameShop() {
+    std::cout << "[Mini Game Shop Initialized]\n";
+}
+
+void GameManager::renderMiniGameShop() {
+    sf::Text text;
+    text.setFont(font);
+    text.setString("Mini Game Shop (Coming Soon)");
+    text.setCharacterSize(28);
+    text.setFillColor(sf::Color::White);
+    text.setPosition(100.f, 100.f);
+    window.draw(text);
+}
+
+void GameManager::handleMiniGameShopInput(sf::Keyboard::Key key) {
+    if (key == sf::Keyboard::Escape) {
+        std::cout << "Leaving Mini Game Shop\n";
+        state = GameState::ShopCategoryView;
+    }
+}
+
+void GameManager::initFishTankShop() {
+    std::cout << "[Fish Tank Shop Initialized]\n";
+}
+
+void GameManager::renderFishTankShop() {
+    sf::Text text;
+    text.setFont(font);
+    text.setString("Fish Tank Shop (Coming Soon)");
+    text.setCharacterSize(28);
+    text.setFillColor(sf::Color::White);
+    text.setPosition(100.f, 100.f);
+    window.draw(text);
+}
+
+void GameManager::handleFishTankShopInput(sf::Keyboard::Key key) {
+    if (key == sf::Keyboard::Escape) {
+        std::cout << "Leaving Fish Tank Shop\n";
+        state = GameState::ShopCategoryView;
+    }
+}

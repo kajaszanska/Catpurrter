@@ -20,6 +20,20 @@ bool Player::loadFromFile(const std::string& filename) {
     for (const auto& hat : data["unlockedHats"]) {
         unlockedHats.push_back(hat);
     }
+    ownedDecorations.clear();
+    for (const auto& item : data["ownedDecorations"]) {
+        ownedDecorations.push_back(item);
+    }
+
+    shelfContents.clear();
+    for (const auto& item : data["shelfContents"]) {
+        shelfContents.push_back(item);
+    }
+
+    aquariumContents.clear();
+    for (const auto& item : data["aquariumContents"]) {
+        aquariumContents.push_back(item);
+    }
 
     return true;
 }
@@ -29,6 +43,10 @@ void Player::saveToFile(const std::string& filename) {
     data["coins"] = coins;
     data["equippedHat"] = equippedHat;
     data["unlockedHats"] = unlockedHats;
+    data["ownedDecorations"] = ownedDecorations;
+    data["shelfContents"] = shelfContents;
+    data["aquariumContents"] = aquariumContents;
+
 
     std::ofstream outFile(filename);
     outFile << data.dump(4);

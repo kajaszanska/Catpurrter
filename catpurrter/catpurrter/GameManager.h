@@ -9,8 +9,15 @@ enum class GameState {
     RoomView,
     ComputerView,
     StorageView,
-    ShopView
+    ShelfView,
+    ShopCategoryView,
+    HatShop,
+    ShelfShop,
+    FishTankShop,
+    MiniGameShop,
+    MiniGame
 };
+
 struct ShopItem {
     std::string name;
     int cost;
@@ -68,9 +75,9 @@ private:
     void renderStorageView();
     void handleStorageInput(sf::Keyboard::Key key);
 
-    void initShopView();
-    void renderShopView();
-    void handleShopInput(sf::Keyboard::Key key);
+    void initHatShopView();
+    void renderHatShopView();
+    void handleHatShopInput(sf::Keyboard::Key key);
 
     struct ShopItem {
         std::string name;
@@ -83,9 +90,50 @@ private:
     { "pirate", 10 }
     };
 
+    std::vector<std::pair<std::string, int>> shelfCatalog = {
+    { "Figure", 150 },
+    { "Photo", 100 },
+    { "Plant", 200 }
+    };
+
+    std::vector<sf::Text> shelfOptions;
+    int shelfSelectionIndex = 0;
+
+    void initShelfView();
+    void renderShelfView();
+    void handleShelfInput(sf::Keyboard::Key key);
+
+
 
     std::vector<ShopItem> shopItems;
     int shopSelectionIndex = 0;
     std::vector<sf::Text> shopVisualItems; 
+
+    void initMiniGame();
+    void renderMiniGame();
+    void handleMiniGameInput(sf::Keyboard::Key key);
+
+    std::vector<sf::Text> shopCategoryOptions;
+    int shopCategoryIndex = 0;
+
+    void initShopCategoryView();
+    void renderShopCategoryView();
+    void handleShopCategoryInput(sf::Keyboard::Key key);
+
+    std::vector<ShopItem> shelfShopItems;
+
+    void initShelfShop();
+    void renderShelfShop();
+    void handleShelfShopInput(sf::Keyboard::Key key);
+
+    std::vector<ShopItem> fishTankShopItems;
+    void initFishTankShop();
+    void renderFishTankShop();
+    void handleFishTankShopInput(sf::Keyboard::Key key);
+
+    void initMiniGameShop();
+    void renderMiniGameShop();
+    void handleMiniGameShopInput(sf::Keyboard::Key key);
+
 
 };
