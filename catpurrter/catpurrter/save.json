@@ -1,15 +1,15 @@
 {
-    "aquariumContents": [],
-    "coins": 900,
+    "aquariumContents": [
+        "Goldfish"
+    ],
+    "coins": 1000,
     "equippedHat": "cap",
     "ownedDecorations": [
-        "Plant",
-        "Photo"
+        "Plant"
     ],
     "shelfContents": [],
     "unlockedHats": [
         "cap",
-        "crown",
-        "pirate"
+        "crown"
     ]
 }

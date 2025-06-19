@@ -551,6 +551,7 @@ void GameManager::handleHatShopInput(sf::Keyboard::Key key) {
             playerData.coins -= hatCost;
             playerData.unlockedHats.push_back(selectedHat);
             playerData.saveToFile("save.json");
+            initHatShopView();
             std::cout << "Unlocked hat: " << selectedHat << " for " << hatCost << " coins\n";
         }
         else {
@@ -799,6 +800,7 @@ void GameManager::handleShelfShopInput(sf::Keyboard::Key key) {
             playerData.coins -= cost;
             playerData.ownedDecorations.push_back(name);
             playerData.saveToFile("save.json");
+            initShelfShop();
             std::cout << "Purchased: " << name << " for " << cost << " coins\n";
         }
         else {
@@ -831,22 +833,77 @@ void GameManager::handleMiniGameShopInput(sf::Keyboard::Key key) {
 }
 
 void GameManager::initFishTankShop() {
-    std::cout << "[Fish Tank Shop Initialized]\n";
+    fishTankShopItems.clear();
+    fishTankShopSelectionIndex = 0;
+
+    float y = 150.f;
+    for (const auto& [name, cost] : fishTankCatalog) {
+        sf::Text text;
+        text.setFont(font);
+
+        std::string label = name + " - " + std::to_string(cost) + " coins";
+        if (std::find(playerData.aquariumContents.begin(), playerData.aquariumContents.end(), name) != playerData.aquariumContents.end()) {
+            label += " (Owned)";
+        }
+
+        text.setString(label);
+        text.setCharacterSize(28);
+        text.setFillColor(sf::Color::White);
+        text.setPosition(100.f, y);
+        fishTankShopItems.push_back(text);
+        y += 40.f;
+    }
 }
 
+
 void GameManager::renderFishTankShop() {
-    sf::Text text;
-    text.setFont(font);
-    text.setString("Fish Tank Shop (Coming Soon)");
-    text.setCharacterSize(28);
-    text.setFillColor(sf::Color::White);
-    text.setPosition(100.f, 100.f);
-    window.draw(text);
+    sf::Text label;
+    label.setFont(font);
+    label.setString("Fish Tank Shop");
+    label.setCharacterSize(30);
+    label.setFillColor(sf::Color::Cyan);
+    label.setPosition(100.f, 30.f);
+    window.draw(label);
+
+    for (size_t i = 0; i < fishTankShopItems.size(); ++i) {
+        fishTankShopItems[i].setFillColor(i == fishTankShopSelectionIndex ? sf::Color::Yellow : sf::Color::White);
+        window.draw(fishTankShopItems[i]);
+    }
 }
+
 
 void GameManager::handleFishTankShopInput(sf::Keyboard::Key key) {
     if (key == sf::Keyboard::Escape) {
         std::cout << "Leaving Fish Tank Shop\n";
         state = GameState::ShopCategoryView;
+        return;
+    }
+
+    if (fishTankCatalog.empty()) return;
+
+    if (key == sf::Keyboard::W || key == sf::Keyboard::Up) {
+        if (fishTankShopSelectionIndex > 0) fishTankShopSelectionIndex--;
+    }
+    else if (key == sf::Keyboard::S || key == sf::Keyboard::Down) {
+        if (fishTankShopSelectionIndex < static_cast<int>(fishTankCatalog.size()) - 1)
+            fishTankShopSelectionIndex++;
+    }
+    else if (key == sf::Keyboard::Enter) {
+        const auto& [name, cost] = fishTankCatalog[fishTankShopSelectionIndex];
+
+        if (std::find(playerData.aquariumContents.begin(), playerData.aquariumContents.end(), name) != playerData.aquariumContents.end()) {
+            std::cout << "Already owned: " << name << "\n";
+        }
+        else if (playerData.coins >= cost) {
+            playerData.coins -= cost;
+            playerData.aquariumContents.push_back(name);
+            playerData.saveToFile("save.json");
+            initFishTankShop();  
+            std::cout << "Purchased: " << name << " for " << cost << " coins\n";
+        }
+        else {
+            std::cout << "Not enough coins for: " << name << "\n";
+        }
     }
 }
+

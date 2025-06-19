@@ -92,6 +92,17 @@ private:
     { "Plant", 200 }
     };
 
+    std::vector<std::pair<std::string, int>> fishTankCatalog = {
+     { "Goldfish", 100 },
+     { "Aquatic Plant", 150 },
+     { "Bubble Toy", 200 }
+    };
+
+    std::vector<sf::Text> fishTankShopItems;
+    int fishTankShopSelectionIndex = 0;
+
+
+
     std::vector<sf::Text> shelfOptions;
     int shelfSelectionIndex = 0;
 
@@ -130,7 +141,6 @@ private:
     void renderShelfShop();
     void handleShelfShopInput(sf::Keyboard::Key key);
 
-    std::vector<ShopItem> fishTankShopItems;
     void initFishTankShop();
     void renderFishTankShop();
     void handleFishTankShopInput(sf::Keyboard::Key key);
