@@ -2,6 +2,7 @@
 #include "Player.h"
 #include <iostream>
 
+
 GameManager::GameManager()
     : window(sf::VideoMode(800, 600), "Catpurrter - Start Menu"), selectedIndex(0), state(GameState::StartMenu)
 {
@@ -479,7 +480,7 @@ void GameManager::initHatShopView() {
     shopSelectionIndex = 0;
 
     float y = 100.f;
-    for (const auto& hat : shopCatalog) {
+    for (const auto& hat : hatCatalog) {
         std::string name = hat.first;
         int price = hat.second;
 
@@ -727,7 +728,7 @@ void GameManager::initShelfShop() {
     shopSelectionIndex = 0;
 
     float y = 150.f;
-    for (const auto& [name, cost] : shelfCatalog) {
+    for (const auto& [name, cost] : shelfDecorationCatalog) {
         sf::Text text;
         text.setFont(font);
 
@@ -778,7 +779,7 @@ void GameManager::handleShelfShopInput(sf::Keyboard::Key key) {
 
 
     if (key == sf::Keyboard::Enter) {
-        const auto& [name, cost] = shelfCatalog[shopSelectionIndex];
+        const auto& [name, cost] = shelfDecorationCatalog[shopSelectionIndex];
 
         if (std::find(playerData.ownedDecorations.begin(), playerData.ownedDecorations.end(), name) != playerData.ownedDecorations.end()) {
             std::cout << "Already owned: " << name << "\n";
@@ -824,7 +825,7 @@ void GameManager::initFishTankShop() {
     fishTankShopSelectionIndex = 0;
 
     float y = 150.f;
-    for (const auto& [name, cost] : fishTankCatalog) {
+    for (const auto& [name, cost] : fishTankItemCatalog) {
         sf::Text text;
         text.setFont(font);
 
@@ -864,12 +865,12 @@ void GameManager::handleFishTankShopInput(sf::Keyboard::Key key) {
         return;
     }
 
-    if (fishTankCatalog.empty()) return;
+    if (fishTankItemCatalog.empty()) return;
 
     handleShopNavigationInput(key, fishTankShopSelectionIndex, fishTankShopItems);
 
      if (key == sf::Keyboard::Enter) {
-        const auto& [name, cost] = fishTankCatalog[fishTankShopSelectionIndex];
+        const auto& [name, cost] = fishTankItemCatalog[fishTankShopSelectionIndex];
 
         if (std::find(playerData.aquariumContents.begin(), playerData.aquariumContents.end(), name) != playerData.aquariumContents.end()) {
             std::cout << "Already owned: " << name << "\n";

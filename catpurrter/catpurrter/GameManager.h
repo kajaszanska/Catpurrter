@@ -84,20 +84,20 @@ private:
     void renderHatShopView();
     void handleHatShopInput(sf::Keyboard::Key key);
 
-    std::vector<std::pair<std::string, int>> shopCatalog = {
+    std::vector<std::pair<std::string, int>> hatCatalog = {
     { "cap", 100 },
     { "crown", 200 },
     { "wizard", 300 },
     { "pirate", 10 }
     };
 
-    std::vector<std::pair<std::string, int>> shelfCatalog = {
+    std::vector<std::pair<std::string, int>> shelfDecorationCatalog = {
     { "Figure", 150 },
     { "Photo", 100 },
     { "Plant", 200 }
     };
 
-    std::vector<std::pair<std::string, int>> fishTankCatalog = {
+    std::vector<std::pair<std::string, int>> fishTankItemCatalog = {
      { "Goldfish", 100 },
      { "Aquatic Plant", 150 },
      { "Bubble Toy", 200 }
