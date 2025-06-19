@@ -39,6 +39,10 @@ private:
     GameState state;
     Player playerData;
 
+    template<typename T>
+    void handleShopNavigationInput(sf::Keyboard::Key key, int& selectionIndex, const std::vector<T>& items);
+
+
     void processEvents();
     void update();
     void render();
@@ -154,6 +158,8 @@ private:
 
     void drawCoinDisplay();
     void drawSectionTitle(const std::string& title);
+
+   
 
 
 };

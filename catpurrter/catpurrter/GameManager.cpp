@@ -531,13 +531,9 @@ void GameManager::handleHatShopInput(sf::Keyboard::Key key) {
 
     if (hatShopItems.empty()) return;
 
-    if (key == sf::Keyboard::W || key == sf::Keyboard::Up) {
-        if (shopSelectionIndex > 0) shopSelectionIndex--;
-    }
-    else if (key == sf::Keyboard::S || key == sf::Keyboard::Down) {
-        if (shopSelectionIndex < static_cast<int>(hatShopItems.size()) - 1) shopSelectionIndex++;
-    }
-    else if (key == sf::Keyboard::Enter) {
+    handleShopNavigationInput(key, shopSelectionIndex, hatShopItems);
+
+    if (key == sf::Keyboard::Enter) {
         std::string selectedHat = hatShopItems[shopSelectionIndex].name;
         int hatCost = hatShopItems[shopSelectionIndex].cost;
 
@@ -778,15 +774,10 @@ void GameManager::handleShelfShopInput(sf::Keyboard::Key key) {
 
     if (shopVisualItems.empty()) return;
 
-    if (key == sf::Keyboard::Up || key == sf::Keyboard::W) {
-        if (shopSelectionIndex > 0)
-            shopSelectionIndex--;
-    }
-    else if (key == sf::Keyboard::Down || key == sf::Keyboard::S) {
-        if (shopSelectionIndex < static_cast<int>(shopVisualItems.size()) - 1)
-            shopSelectionIndex++;
-    }
-    else if (key == sf::Keyboard::Enter) {
+    handleShopNavigationInput(key, shopSelectionIndex, shopVisualItems);
+
+
+    if (key == sf::Keyboard::Enter) {
         const auto& [name, cost] = shelfCatalog[shopSelectionIndex];
 
         if (std::find(playerData.ownedDecorations.begin(), playerData.ownedDecorations.end(), name) != playerData.ownedDecorations.end()) {
@@ -875,14 +866,9 @@ void GameManager::handleFishTankShopInput(sf::Keyboard::Key key) {
 
     if (fishTankCatalog.empty()) return;
 
-    if (key == sf::Keyboard::W || key == sf::Keyboard::Up) {
-        if (fishTankShopSelectionIndex > 0) fishTankShopSelectionIndex--;
-    }
-    else if (key == sf::Keyboard::S || key == sf::Keyboard::Down) {
-        if (fishTankShopSelectionIndex < static_cast<int>(fishTankCatalog.size()) - 1)
-            fishTankShopSelectionIndex++;
-    }
-    else if (key == sf::Keyboard::Enter) {
+    handleShopNavigationInput(key, fishTankShopSelectionIndex, fishTankShopItems);
+
+     if (key == sf::Keyboard::Enter) {
         const auto& [name, cost] = fishTankCatalog[fishTankShopSelectionIndex];
 
         if (std::find(playerData.aquariumContents.begin(), playerData.aquariumContents.end(), name) != playerData.aquariumContents.end()) {
@@ -953,3 +939,14 @@ void GameManager::drawSectionTitle(const std::string& title) {
     titleText.setPosition(100.f, 20.f); 
     window.draw(titleText);
 }
+
+template<typename T>
+void GameManager::handleShopNavigationInput(sf::Keyboard::Key key, int& selectionIndex, const std::vector<T>& items) {
+    if (key == sf::Keyboard::W || key == sf::Keyboard::Up) {
+        if (selectionIndex > 0) selectionIndex--;
+    }
+    else if (key == sf::Keyboard::S || key == sf::Keyboard::Down) {
+        if (selectionIndex < static_cast<int>(items.size()) - 1) selectionIndex++;
+    }
+}
+
