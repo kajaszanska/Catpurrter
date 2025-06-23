@@ -49,16 +49,20 @@ void GameManager::processEvents() {
         if (event.type == sf::Event::Closed)
             window.close();
 
-        if (event.type == sf::Event::KeyPressed) { 
-            if (state == GameState::StartMenu) {
-                if (event.key.code == sf::Keyboard::Up || event.key.code == sf::Keyboard::W) moveUp();
-                if (event.key.code == sf::Keyboard::Down || event.key.code == sf::Keyboard::S) moveDown();
-                if (event.key.code == sf::Keyboard::Enter) selectOption();
-            }
-            else if (state == GameState::RoomView) {
-                     handleRoomInput(event.key.code);
-                     }
-            else if (state == GameState::ComputerView) {
+        if (event.type == sf::Event::KeyPressed) {
+            switch (state) {
+            case GameState::StartMenu:
+                if (event.key.code == sf::Keyboard::Up || event.key.code == sf::Keyboard::W)
+                    moveUp();
+                if (event.key.code == sf::Keyboard::Down || event.key.code == sf::Keyboard::S)
+                    moveDown();
+                if (event.key.code == sf::Keyboard::Enter)
+                    selectOption();
+                break;
+            case GameState::RoomView:
+                handleRoomInput(event.key.code);
+                break;
+            case GameState::ComputerView:
                 if (event.key.code == sf::Keyboard::Escape) {
                     std::cout << "Closed Computer\n";
                     state = GameState::RoomView;
@@ -66,17 +70,17 @@ void GameManager::processEvents() {
                 else {
                     handleComputerInput(event.key.code);
                 }
-            }
-            else if (state == GameState::StorageView) {
+                break;
+            case GameState::StorageView:
                 if (event.key.code == sf::Keyboard::Escape) {
                     std::cout << "Leaving Storage\n";
                     state = GameState::RoomView;
                 }
                 else {
-                    handleStorageInput(event.key.code);  
+                    handleStorageInput(event.key.code);
                 }
-            }
-            else if (state == GameState::HatShop) {
+                break;
+            case GameState::HatShop:
                 if (event.key.code == sf::Keyboard::Escape) {
                     std::cout << "Leaving Hat Shop\n";
                     state = GameState::ShopCategoryView;
@@ -84,11 +88,11 @@ void GameManager::processEvents() {
                 else {
                     handleHatShopInput(event.key.code);
                 }
-            }
-            else if (state == GameState::MiniGame) {
+                break;
+            case GameState::MiniGame:
                 handleMiniGameInput(event.key.code);
-            }
-            else if (state == GameState::ShelfView) {
+                break;
+            case GameState::ShelfView:
                 if (event.key.code == sf::Keyboard::Escape) {
                     std::cout << "Leaving Shelves\n";
                     state = GameState::RoomView;
@@ -96,8 +100,8 @@ void GameManager::processEvents() {
                 else {
                     handleShelfInput(event.key.code);
                 }
-            }
-            else if (state == GameState::ShopCategoryView) {
+                break;
+            case GameState::ShopCategoryView:
                 if (event.key.code == sf::Keyboard::Escape) {
                     std::cout << "Leaving Shop Category\n";
                     state = GameState::ComputerView;
@@ -105,8 +109,8 @@ void GameManager::processEvents() {
                 else {
                     handleShopCategoryInput(event.key.code);
                 }
-            }
-            else if (state == GameState::ShelfShop) {
+                break;
+            case GameState::ShelfShop:
                 if (event.key.code == sf::Keyboard::Escape) {
                     std::cout << "Exited Shelf Shop\n";
                     state = GameState::ShopCategoryView;
@@ -114,17 +118,16 @@ void GameManager::processEvents() {
                 else {
                     handleShelfShopInput(event.key.code);
                 }
-            }
-            else if (state == GameState::AquariumView) {
+                break;
+            case GameState::AquariumView:
                 handleAquariumInput(event.key.code);
-            }
-
-
-            else if (state == GameState::FishTankShop) {
+                break;
+            case GameState::FishTankShop:
                 handleFishTankShopInput(event.key.code);
-            }
-            else if (state == GameState::MiniGameShop) {
+                break;
+            case GameState::MiniGameShop:
                 handleMiniGameShopInput(event.key.code);
+                break;
             }
         }
     }
