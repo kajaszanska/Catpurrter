@@ -13,6 +13,7 @@ public:
     std::vector<std::string> ownedDecorations;
     std::vector<std::string> shelfContents;
     std::vector<std::string> aquariumContents;
+    std::vector<std::string> ownedMiniGames;
 
 
     Player();

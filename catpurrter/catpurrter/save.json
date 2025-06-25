@@ -1,21 +1,22 @@
 {
     "aquariumContents": [
-        "Goldfish",
-        "Aquatic Plant",
-        "Bubble Toy"
+        "goldfish",
+        "bubbletoy"
     ],
-    "coins": 9490,
-    "equippedHat": "wizard",
+    "coins": 8840,
+    "equippedHat": "none",
     "ownedDecorations": [
-        "Plant",
-        "Figure",
-        "Photo"
+        "vase"
+    ],
+    "ownedMiniGames": [
+        "snake",
+        "tetris",
+        "pong"
     ],
     "shelfContents": [],
     "unlockedHats": [
         "cap",
-        "wizard",
-        "pirate",
-        "crown"
+        "crown",
+        "wizard"
     ]
 }

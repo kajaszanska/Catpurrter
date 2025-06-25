@@ -142,13 +142,33 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Aquarium.cpp" />
+    <ClCompile Include="Computer.cpp" />
+    <ClCompile Include="FishTankShopView.cpp" />
     <ClCompile Include="GameManager.cpp" />
+    <ClCompile Include="HatShopView.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MiniGameShopView.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="Room.cpp" />
+    <ClCompile Include="Shelf.cpp" />
+    <ClCompile Include="ShelfShopView.cpp" />
+    <ClCompile Include="ShopCategory.cpp" />
+    <ClCompile Include="StorageRack.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Aquarium.h" />
+    <ClInclude Include="Computer.h" />
+    <ClInclude Include="FishTankShopView.h" />
     <ClInclude Include="GameManager.h" />
+    <ClInclude Include="HatShopView.h" />
+    <ClInclude Include="MiniGameShopView.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="Room.h" />
+    <ClInclude Include="Shelf.h" />
+    <ClInclude Include="ShelfShopView.h" />
+    <ClInclude Include="ShopCategory.h" />
+    <ClInclude Include="StorageRack.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

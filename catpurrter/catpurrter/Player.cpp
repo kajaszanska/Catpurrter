@@ -35,6 +35,10 @@ bool Player::loadFromFile(const std::string& filename) {
         aquariumContents.push_back(item);
     }
 
+    ownedMiniGames.clear();
+    for (const auto& game : data["ownedMiniGames"])
+        ownedMiniGames.push_back(game);
+
     return true;
 }
 
@@ -46,7 +50,7 @@ void Player::saveToFile(const std::string& filename) {
     data["ownedDecorations"] = ownedDecorations;
     data["shelfContents"] = shelfContents;
     data["aquariumContents"] = aquariumContents;
-
+    data["ownedMiniGames"] = ownedMiniGames;
 
     std::ofstream outFile(filename);
     outFile << data.dump(4);
