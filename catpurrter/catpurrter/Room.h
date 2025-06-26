@@ -4,34 +4,41 @@
 #include <string>
 #include "Player.h"
 
-enum class RoomSelection {
-    Aquarium,
-    Computer,
-    StorageRack,
-    Shelves,
-    Doors
-};
-
 class Room {
 public:
     Room(sf::Font& font, Player& player);
 
+    void movePlayer(int dx, int dy);
+
     void init();
+    void handleInput(sf::Keyboard::Key key);
     void update();
     void render(sf::RenderWindow& window);
-    void handleInput(sf::Keyboard::Key key);
 
-    // View transition trigger
-    bool shouldChangeView() const;
-    RoomSelection getSelectedView() const;
-    void resetViewChangeFlag();
+    // For highlighting/interactions:
+    bool isNearObject() const;
+    std::string getNearbyObject() const;
 
 private:
     sf::Font& font;
     Player& playerData;
 
-    std::vector<sf::Text> roomObjects;
-    int selectionIndex;
-    bool changeView;
-    RoomSelection selectedView;
+    int playerX;
+    int playerY;
+
+    // Player (avatar)
+    sf::RectangleShape playerRect;
+    sf::Vector2f playerPos;
+    float playerSpeed = 0.20f;
+
+    // Room objects (rectangles and names)
+    struct RoomObject {
+        sf::RectangleShape rect;
+        std::string name;
+    };
+    std::vector<RoomObject> objects;
+    int highlightedIndex = -1;
+
+    sf::Texture backgroundTexture;
+    sf::Sprite backgroundSprite;
 };

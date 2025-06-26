@@ -24,10 +24,12 @@ GameManager::GameManager()
 void GameManager::run() {
     while (window.isOpen()) {
         processEvents();
+        handleContinuousMovement(); 
         update();
         render();
     }
 }
+
 
 void GameManager::loadFont() {
     if (!font.loadFromFile("assets/fonts/Roboto-VariableFont_wdth,wght.ttf")) {
@@ -55,6 +57,12 @@ void GameManager::processEvents() {
         if (event.type == sf::Event::Closed)
             window.close();
 
+   
+        if (event.type == sf::Event::KeyPressed)
+            keyState[event.key.code] = true;
+        if (event.type == sf::Event::KeyReleased)
+            keyState[event.key.code] = false;
+
         if (event.type == sf::Event::KeyPressed) {
             switch (state) {
             case GameState::StartMenu:
@@ -67,58 +75,53 @@ void GameManager::processEvents() {
                 break;
 
             case GameState::RoomView:
-                if (roomView)
+                if (roomView) {
                     roomView->handleInput(event.key.code);
+                    roomView->update();
 
-                // Handle view change trigger
-                if (roomView && roomView->shouldChangeView()) {
-                    RoomSelection next = roomView->getSelectedView();
-                    roomView->resetViewChangeFlag();
+                    if ((event.key.code == sf::Keyboard::Enter || event.key.code == sf::Keyboard::Space) && roomView->isNearObject()) {
+                        std::string obj = roomView->getNearbyObject();
 
-                    switch (next) {
-                    case RoomSelection::Computer:
-                        state = GameState::ComputerView;
-                        if (computerView) delete computerView;
-                        computerView = new Computer(font, playerData);
-                        computerView->init();
-                        std::cout << "Opened Computer\n";
-                        break;
-
-                    case RoomSelection::Doors:
-                        std::cout << "Returning to Start Menu via Doors\n";
-                        state = GameState::StartMenu;
-                        selectedIndex = 0;
-                        menuItems.clear();
-                        initMenu();
-                        break;
-                    case RoomSelection::StorageRack:
-                        std::cout << "Entered Storage Rack\n";
-                        state = GameState::StorageView;
-                        if (storageRackView) delete storageRackView;
-                        storageRackView = new StorageRack(font, playerData);
-                        storageRackView->init();
-                        break;
-                    case RoomSelection::Shelves:
-                        std::cout << "Entered Shelf View\n";
-                        state = GameState::ShelfView;
-
-                        if (shelfView) delete shelfView;
-                        shelfView = new Shelf(font, playerData);
-                        shelfView->init();
-                        break;
-
-                    case RoomSelection::Aquarium:
-                        std::cout << "Entered Aquarium View\n";
-                        state = GameState::AquariumView;
-
-                        if (aquariumView) delete aquariumView;
-                        aquariumView = new Aquarium(font, playerData);
-                        aquariumView->init();
-                        break;
+                        if (obj == "Computer") {
+                            state = GameState::ComputerView;
+                            if (computerView) delete computerView;
+                            computerView = new Computer(font, playerData);
+                            computerView->init();
+                            std::cout << "Opened Computer\n";
+                        }
+                        else if (obj == "Aquarium") {
+                            state = GameState::AquariumView;
+                            if (aquariumView) delete aquariumView;
+                            aquariumView = new Aquarium(font, playerData);
+                            aquariumView->init();
+                            std::cout << "Entered Aquarium View\n";
+                        }
+                        else if (obj == "Shelves") {
+                            state = GameState::ShelfView;
+                            if (shelfView) delete shelfView;
+                            shelfView = new Shelf(font, playerData);
+                            shelfView->init();
+                            std::cout << "Entered Shelf View\n";
+                        }
+                        else if (obj == "Storage Rack") {
+                            state = GameState::StorageView;
+                            if (storageRackView) delete storageRackView;
+                            storageRackView = new StorageRack(font, playerData);
+                            storageRackView->init();
+                            std::cout << "Entered Storage Rack\n";
+                        }
+                        else if (obj == "Doors") {
+                            state = GameState::StartMenu;
+                            selectedIndex = 0;
+                            menuItems.clear();
+                            initMenu();
+                            std::cout << "Returned to Main Menu\n";
+                        }
                     }
                 }
                 break;
 
+              
             case GameState::ComputerView:
                 if (event.type == sf::Event::KeyPressed) {
                     computerView->handleInput(event.key.code);
@@ -311,59 +314,82 @@ void GameManager::processEvents() {
 
 
 void GameManager::update() {
-    if (state == GameState::StartMenu)
+    switch (state) {
+    case GameState::StartMenu:
         updateStartMenu();
-    else if (state == GameState::RoomView && roomView)
-        roomView->update();
-    else if (state == GameState::ComputerView && computerView)
-        computerView->update();
-    else if (state == GameState::AquariumView && aquariumView)
-        aquariumView->update();
-    else if (state == GameState::ShelfView && shelfView)
-        shelfView->update();
-    else if (state == GameState::StorageView && storageRackView)
-        storageRackView->update();
-    else if (state == GameState::ShopCategoryView && shopCategoryView)
-        shopCategoryView->update();
-    else if (state == GameState::FishTankShop && fishTankShopView)
-        fishTankShopView->update(); 
-
-
+        break;
+    case GameState::RoomView:
+        if (roomView) roomView->update();
+        break;
+    case GameState::ComputerView:
+        if (computerView) computerView->update();
+        break;
+    case GameState::AquariumView:
+        if (aquariumView) aquariumView->update();
+        break;
+    case GameState::ShelfView:
+        if (shelfView) shelfView->update();
+        break;
+    case GameState::StorageView:
+        if (storageRackView) storageRackView->update();
+        break;
+    case GameState::ShopCategoryView:
+        if (shopCategoryView) shopCategoryView->update();
+        break;
+    case GameState::FishTankShop:
+        if (fishTankShopView) fishTankShopView->update();
+        break;
+    }
 }
+
 
 
 
 void GameManager::render() {
     window.clear();
-    if (state == GameState::StartMenu)
+
+    switch (state) {
+    case GameState::StartMenu:
         renderStartMenu();
-    else if (state == GameState::RoomView && roomView)
-        roomView->render(window);
-    else if (state == GameState::ComputerView && computerView)
-        computerView->render(window);
-    else if (state == GameState::StorageView && storageRackView)
-        storageRackView->render(window);
-    else if (state == GameState::MiniGame)
+        break;
+    case GameState::RoomView:
+        if (roomView) roomView->render(window);
+        break;
+    case GameState::ComputerView:
+        if (computerView) computerView->render(window);
+        break;
+    case GameState::AquariumView:
+        if (aquariumView) aquariumView->render(window);
+        break;
+    case GameState::ShelfView:
+        if (shelfView) shelfView->render(window);
+        break;
+    case GameState::StorageView:
+        if (storageRackView) storageRackView->render(window);
+        break;
+    case GameState::ShopCategoryView:
+        if (shopCategoryView) shopCategoryView->render(window);
+        break;
+    case GameState::ShelfShop:
+        if (shelfShopView) shelfShopView->render(window);
+        break;
+    case GameState::FishTankShop:
+        if (fishTankShopView) fishTankShopView->render(window);
+        break;
+    case GameState::MiniGameShop:
+        if (miniGameShopView) miniGameShopView->render(window);
+        break;
+    case GameState::HatShop:
+        if (hatShopView) hatShopView->render(window);
+        break;
+    case GameState::MiniGame:
         renderMiniGame();
-    else if (state == GameState::ShelfView && shelfView)
-        shelfView->render(window);
-    else if (state == GameState::ShopCategoryView && shopCategoryView)
-        shopCategoryView->render(window);
-    else if (state == GameState::ShelfShop && shelfShopView)
-        shelfShopView->render(window);
-    else if (state == GameState::FishTankShop && fishTankShopView)
-        fishTankShopView->render(window); 
-    else if (state == GameState::MiniGameShop && miniGameShopView)
-        miniGameShopView->render(window);
-    else if (state == GameState::AquariumView && aquariumView)
-        aquariumView->render(window);
-    else if (state == GameState::HatShop && hatShopView)
-        hatShopView->render(window);
-
-
+        break;
+    }
 
     window.display();
 }
+
 
 
 void GameManager::moveUp() {
@@ -492,3 +518,14 @@ void GameManager::handleShopNavigationInput(sf::Keyboard::Key key, int& selectio
     }
 }
 
+void GameManager::handleContinuousMovement() {
+    if (state == GameState::RoomView && roomView) {
+        int dx = 0, dy = 0;
+        if (keyState[sf::Keyboard::A] || keyState[sf::Keyboard::Left])  dx -= 1;
+        if (keyState[sf::Keyboard::D] || keyState[sf::Keyboard::Right]) dx += 1;
+        if (keyState[sf::Keyboard::W] || keyState[sf::Keyboard::Up])    dy -= 1;
+        if (keyState[sf::Keyboard::S] || keyState[sf::Keyboard::Down])  dy += 1;
+        if (dx != 0 || dy != 0)
+            roomView->movePlayer(dx, dy);
+    }
+}

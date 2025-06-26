@@ -84,6 +84,9 @@ private:
     void renderMiniGame();
     void handleMiniGameInput(sf::Keyboard::Key key);
 
+    void handleContinuousMovement();
+    std::map<sf::Keyboard::Key, bool> keyState;
+
     enum class ShopCategory {
         Hat,
         Shelf,
