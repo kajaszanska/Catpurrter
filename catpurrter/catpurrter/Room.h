@@ -2,6 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <string>
+#include <memory>
 #include "Player.h"
 
 class Room {
@@ -23,22 +24,28 @@ private:
     sf::Font& font;
     Player& playerData;
 
-    int playerX;
-    int playerY;
-
     // Player (avatar)
     sf::RectangleShape playerRect;
     sf::Vector2f playerPos;
     float playerSpeed = 0.20f;
 
-    // Room objects (rectangles and names)
     struct RoomObject {
         sf::RectangleShape rect;
         std::string name;
+        std::shared_ptr<sf::Texture> texture; // This is fine!
+        // Always keep this pointer alive as long as the rect exists!
     };
+
     std::vector<RoomObject> objects;
     int highlightedIndex = -1;
 
     sf::Texture backgroundTexture;
     sf::Sprite backgroundSprite;
+
+    // Object creators
+    RoomObject createComputer();
+    RoomObject createAquarium();
+    RoomObject createStorageRack();
+    RoomObject createShelves();
+    RoomObject createDoors();
 };

@@ -354,6 +354,7 @@ void GameManager::render() {
         break;
     case GameState::RoomView:
         if (roomView) roomView->render(window);
+        drawCoinDisplay(window, font, playerData.coins, sf::Vector2f(30.f, 20.f));
         break;
     case GameState::ComputerView:
         if (computerView) computerView->render(window);
@@ -498,15 +499,16 @@ void GameManager::drawSectionTitle(sf::RenderWindow& window, sf::Font& font, con
     window.draw(titleText);
 }
 
-void GameManager::drawCoinDisplay(sf::RenderWindow& window, sf::Font& font, int coins) {
-    sf::Text coinText;
-    coinText.setFont(font);
-    coinText.setCharacterSize(24);
-    coinText.setFillColor(sf::Color::White);
-    coinText.setString("Coins: " + std::to_string(coins));
-    coinText.setPosition(500.f, 50.f);
-    window.draw(coinText);
+void GameManager::drawCoinDisplay(sf::RenderWindow& window, sf::Font& font, int coins, sf::Vector2f pos) {
+    sf::Text currencyText;
+    currencyText.setFont(font);
+    currencyText.setCharacterSize(24);
+    currencyText.setFillColor(sf::Color::White);
+    currencyText.setString("Coins: " + std::to_string(coins));
+    currencyText.setPosition(pos);
+    window.draw(currencyText);
 }
+
 
 template<typename T>
 void GameManager::handleShopNavigationInput(sf::Keyboard::Key key, int& selectionIndex, const std::vector<T>& items) {
