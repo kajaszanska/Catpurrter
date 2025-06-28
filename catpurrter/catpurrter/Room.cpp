@@ -76,37 +76,16 @@ void Room::init() {
 
 
 void Room::handleInput(sf::Keyboard::Key key) {
-    sf::Vector2f delta{ 0, 0 };
-    if (key == sf::Keyboard::A || key == sf::Keyboard::Left) delta.x = -playerSpeed;
-    if (key == sf::Keyboard::D || key == sf::Keyboard::Right) delta.x = playerSpeed;
-    if (key == sf::Keyboard::W || key == sf::Keyboard::Up) delta.y = -playerSpeed;
-    if (key == sf::Keyboard::S || key == sf::Keyboard::Down) delta.y = playerSpeed;
+    int dx = 0, dy = 0;
+    if (key == sf::Keyboard::A || key == sf::Keyboard::Left) dx = -1;
+    if (key == sf::Keyboard::D || key == sf::Keyboard::Right) dx = 1;
+    if (key == sf::Keyboard::W || key == sf::Keyboard::Up) dy = -1;
+    if (key == sf::Keyboard::S || key == sf::Keyboard::Down) dy = 1;
 
-    playerPos += delta;
-
-    // Clamp to room bounds
-    float playerWidth = playerRect.getSize().x;
-    float playerHeight = playerRect.getSize().y;
-    float minX = 0.f, maxX = 800.f; // window width
-    float minFeetY = 350.f, maxFeetY = 585.f;
-
-    // Horizontal bounds
-    if (playerPos.x < minX) {
-        playerPos.x = minX;
-    }
-    if (playerPos.x + playerWidth > maxX) {
-        playerPos.x = maxX - playerWidth;
-    }
-    // Vertical bounds (use feet)
-    if (playerPos.y + playerHeight < minFeetY) {
-        playerPos.y = minFeetY - playerHeight;
-    }
-    if (playerPos.y + playerHeight > maxFeetY) {
-        playerPos.y = maxFeetY - playerHeight;
-    }
-
-    playerRect.setPosition(playerPos);
+    // Only call movePlayer, don't touch playerPos here!
+    movePlayer(dx, dy);
 }
+
 
 void Room::update() {
     highlightedIndex = -1;
@@ -146,7 +125,7 @@ void Room::render(sf::RenderWindow& window) {
         window.draw(label);
     }
 
-    // 2. Draw shelf decorations (as before)
+    // 2. Draw shelf decorations
     std::vector<sf::Vector2f> shelfPositions = {
         {580.f, 75.f},  {660.f, 75.f},
         {580.f, 155.f}, {660.f, 155.f}
@@ -164,33 +143,49 @@ void Room::render(sf::RenderWindow& window) {
         decoIdx++;
     }
 
-    // 3. Draw player (BEFORE rack and hats!)
-    window.draw(playerRect);
+    // --- Dynamic draw order for player and rack ---
+    // Get player "feet" and rack collision Y
+    float playerFeetY = playerRect.getPosition().y + playerRect.getSize().y;
+    const auto& rackObj = objects[Room::STORAGE_RACK];
+    float rackCollisionY = rackObj.rect.getPosition().y + rackObj.rect.getSize().y - 40.f;
 
-    // 4. Draw storage rack above player
-    window.draw(objects[Room::STORAGE_RACK].rect);
-
-    // 5. Draw hats on rack above player
+    // Positions for hats on rack
     std::vector<sf::Vector2f> rackPositions = {
-        {45.f,  420.f},  // Top Left
-        {105.f, 420.f},  // Top Right
-        {45.f,  480.f},  // Bottom Left
-        {105.f, 480.f}   // Bottom Right
+        {45.f,  420.f},
+        {105.f, 420.f},
+        {45.f,  480.f},
+        {105.f, 480.f}
     };
-    int hatIdx = 0;
-    for (const auto& hatId : playerData.unlockedHats) {
-        if (hatIdx >= rackPositions.size()) break;
-        auto it = hatTextures.find(hatId);
-        if (it != hatTextures.end()) {
-            sf::Sprite hatSprite;
-            hatSprite.setTexture(it->second);
-            hatSprite.setPosition(rackPositions[hatIdx]);
-            window.draw(hatSprite);
+
+    // Helper to draw rack & hats
+    auto drawRackAndHats = [&]() {
+        window.draw(rackObj.rect);
+        int hatIdx = 0;
+        for (const auto& hatId : playerData.unlockedHats) {
+            if (hatIdx >= rackPositions.size()) break;
+            auto it = hatTextures.find(hatId);
+            if (it != hatTextures.end()) {
+                sf::Sprite hatSprite;
+                hatSprite.setTexture(it->second);
+                hatSprite.setPosition(rackPositions[hatIdx]);
+                window.draw(hatSprite);
+            }
+            hatIdx++;
         }
-        hatIdx++;
+        };
+
+    if (playerFeetY < rackCollisionY) {
+        // Player is behind rack
+        window.draw(playerRect);
+        drawRackAndHats();
+    }
+    else {
+        // Player is in front of rack
+        drawRackAndHats();
+        window.draw(playerRect);
     }
 
-    // 6. Draw interact label and 30x30 square (on top of all)
+    // 4. Draw interact label and 30x30 square (on top of all)
     if (const RoomObject* obj = getHighlightedObject()) {
         // Draw label at top center
         sf::Text interactText;
@@ -222,6 +217,7 @@ void Room::render(sf::RenderWindow& window) {
 
 
 
+
 bool Room::isNearObject() const {
     sf::FloatRect playerBounds(playerRect.getPosition().x, playerRect.getPosition().y, playerRect.getSize().x, playerRect.getSize().y);
     const float INTERACT_DISTANCE = 32.f; // or bigger
@@ -244,54 +240,69 @@ bool Room::isNearObject() const {
 
 
 void Room::movePlayer(int dx, int dy) {
-    sf::Vector2f oldPos = playerPos;
     float playerWidth = playerRect.getSize().x;
     float playerHeight = playerRect.getSize().y;
-
     float minX = 0.f, maxX = 800.f;
     float minFeetY = 350.f, maxFeetY = 585.f;
 
-    // Try X movement first
-    playerPos.x += dx * playerSpeed;
-    // Clamp
-    if (playerPos.x < minX) playerPos.x = minX;
-    if (playerPos.x + playerWidth > maxX) playerPos.x = maxX - playerWidth;
+    // 1. Move X only
+    if (dx != 0) {
+        float newX = playerPos.x + dx * playerSpeed;
+        if (newX < minX) newX = minX;
+        if (newX + playerWidth > maxX) newX = maxX - playerWidth;
 
-    // Check X collision (only feet)
-    sf::FloatRect feetBoxX(playerPos.x, playerPos.y + playerHeight - 2, playerWidth, 2);
-    sf::FloatRect computerBounds = objects[Room::COMPUTER].rect.getGlobalBounds();
-    if (computerBounds.intersects(feetBoxX)) {
-        // Don't move in X if this move causes a new collision
-        playerPos.x = oldPos.x;
+        sf::FloatRect feetBox(newX, playerPos.y + playerHeight - 6, playerWidth, 6);
+
+        bool blockX = false;
+        // Check collisions
+        {
+            sf::FloatRect computerBounds = objects[Room::COMPUTER].rect.getGlobalBounds();
+            sf::FloatRect rackFull = objects[Room::STORAGE_RACK].rect.getGlobalBounds();
+            sf::FloatRect rackBottom(
+                rackFull.left,
+                rackFull.top + rackFull.height - 40,
+                rackFull.width,
+                40
+            );
+            if (computerBounds.intersects(feetBox) || rackBottom.intersects(feetBox))
+                blockX = true;
+        }
+        if (!blockX) playerPos.x = newX;
     }
 
-    // Try Y movement
-    playerPos.y += dy * playerSpeed;
-    // Clamp (feet)
-    if (playerPos.y + playerHeight < minFeetY) playerPos.y = minFeetY - playerHeight;
-    if (playerPos.y + playerHeight > maxFeetY) playerPos.y = maxFeetY - playerHeight;
+    // 2. Move Y only
+    if (dy != 0) {
+        float newY = playerPos.y + dy * playerSpeed;
+        if (newY + playerHeight < minFeetY) newY = minFeetY - playerHeight;
+        if (newY + playerHeight > maxFeetY) newY = maxFeetY - playerHeight;
 
-    sf::FloatRect feetBoxY(playerPos.x, playerPos.y + playerHeight - 2, playerWidth, 2);
-    if (computerBounds.intersects(feetBoxY)) {
-        playerPos.y = oldPos.y;
+        sf::FloatRect feetBox(playerPos.x, newY + playerHeight - 6, playerWidth, 6);
+
+        bool blockY = false;
+        // Check collisions
+        {
+            sf::FloatRect computerBounds = objects[Room::COMPUTER].rect.getGlobalBounds();
+            sf::FloatRect rackFull = objects[Room::STORAGE_RACK].rect.getGlobalBounds();
+            sf::FloatRect rackBottom(
+                rackFull.left,
+                rackFull.top + rackFull.height - 40,
+                rackFull.width,
+                40
+            );
+            if (computerBounds.intersects(feetBox) || rackBottom.intersects(feetBox))
+                blockY = true;
+        }
+        if (!blockY) playerPos.y = newY;
     }
 
+    // Final update
     playerRect.setPosition(playerPos);
-
-    sf::FloatRect rackFull = objects[Room::STORAGE_RACK].rect.getGlobalBounds();
-    sf::FloatRect rackBottom(
-        rackFull.left,
-        rackFull.top + rackFull.height - 40,
-        rackFull.width,
-        40
-    );
-    sf::FloatRect playerFeet(playerPos.x, playerPos.y + playerHeight - 2, playerWidth, 2);
-    if (rackBottom.intersects(playerFeet)) {
-        playerPos = oldPos;
-        playerRect.setPosition(playerPos);
-        return;
-    }
 }
+
+
+
+
+
 
 
 
