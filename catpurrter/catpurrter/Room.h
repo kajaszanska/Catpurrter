@@ -4,10 +4,18 @@
 #include <string>
 #include <memory>
 #include "Player.h"
+#include <map>
+
 
 class Room {
 public:
     Room(sf::Font& font, Player& player);
+
+    struct RoomObject {
+        sf::RectangleShape rect;
+        std::string name;
+        std::shared_ptr<sf::Texture> texture; 
+    };
 
     void movePlayer(int dx, int dy);
 
@@ -19,6 +27,18 @@ public:
     // For highlighting/interactions:
     bool isNearObject() const;
     std::string getNearbyObject() const;
+    const RoomObject* getHighlightedObject() const;
+
+
+
+    enum RoomObjectIndex {
+        COMPUTER = 0,
+        AQUARIUM = 1,
+        STORAGE_RACK = 2,
+        SHELVES = 3,
+        DOORS = 4
+    };
+
 
 private:
     sf::Font& font;
@@ -29,12 +49,7 @@ private:
     sf::Vector2f playerPos;
     float playerSpeed = 0.20f;
 
-    struct RoomObject {
-        sf::RectangleShape rect;
-        std::string name;
-        std::shared_ptr<sf::Texture> texture; // This is fine!
-        // Always keep this pointer alive as long as the rect exists!
-    };
+   
 
     std::vector<RoomObject> objects;
     int highlightedIndex = -1;
@@ -48,4 +63,16 @@ private:
     RoomObject createStorageRack();
     RoomObject createShelves();
     RoomObject createDoors();
+
+ 
+    struct DecorationInfo {
+        std::string id;   
+        std::string name;   
+        int price;
+    };
+
+    std::vector<DecorationInfo> decorations;
+    std::map<std::string, sf::Texture> decorationTextures;
+
+    std::map<std::string, sf::Texture> hatTextures;
 };

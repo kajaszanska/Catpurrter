@@ -6,11 +6,11 @@ ShelfShopView::ShelfShopView(sf::Font& font, Player& player, GameManager& gm)
     : font(font), playerData(player), gameManager(&gm), selectedIndex(0) {
 
     decorations = {
-    {"vase", "Vase", 20},
-    {"books", "Books", 30},
-    {"plant", "Plant", 50}
+        {"car",     "Red Toy Car", 20},
+        {"books",   "Very Interesting Books",  30},
+        {"plant",   "Dull Plant in Pot ",  50},
+        {"picture", "Picture of Cool Cat", 40}
     };
-
 
     float y = 150.f;
     for (const auto& deco : decorations) {
@@ -24,6 +24,7 @@ ShelfShopView::ShelfShopView(sf::Font& font, Player& player, GameManager& gm)
 
     updateOptionColors();
 }
+
 
 
 void ShelfShopView::init() {

@@ -19,4 +19,11 @@ private:
     std::vector<sf::Text> decorationTexts;
     int selectionIndex = 0;
     bool closeRequested = false;
+
+    sf::Texture shelfBackgroundTexture;
+    sf::Sprite shelfBackgroundSprite;
+
+    std::map<std::string, sf::Texture> bigDecorationTextures;
+    std::vector<sf::Sprite> bigDecorationSprites;
+
 };

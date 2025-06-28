@@ -20,6 +20,10 @@ bool Player::loadFromFile(const std::string& filename) {
     for (const auto& hat : data["unlockedHats"]) {
         unlockedHats.push_back(hat);
     }
+    std::cout << "Loaded hats: ";
+    for (const auto& hat : unlockedHats) std::cout << hat << ", ";
+    std::cout << std::endl;
+
     ownedDecorations.clear();
     for (const auto& item : data["ownedDecorations"]) {
         ownedDecorations.push_back(item);

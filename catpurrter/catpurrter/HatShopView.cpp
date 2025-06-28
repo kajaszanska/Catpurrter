@@ -7,11 +7,12 @@ HatShopView::HatShopView(sf::Font& font, Player& player, GameManager& gm)
     : font(font), playerData(player), gameManager(gm)
 {
     hats = {
-    { "cap", "Red Cap", 100 },
-    { "wizard", "Wizard Hat", 300 },
-    { "crown", "Golden Crown", 200 },
-    { "pirate", "Pirate Hat", 10 }
+    {"crown", "Crown", 50},
+    {"pirate", "Pirate Hat", 40},
+    {"froggy", "Froggy Hat", 30},
+    {"wizard", "Wizard Hat", 35}
     };
+
 
 }
 
@@ -59,6 +60,7 @@ void HatShopView::handleInput(sf::Keyboard::Key key) {
         else if (playerData.coins >= price) {
             playerData.coins -= price;
             playerData.unlockedHats.push_back(selectedId);
+            playerData.saveToFile("save.json");
             std::cout << "Bought hat: " << selectedId << " for " << price << " coins\n";
             updateOptionColors();
         }

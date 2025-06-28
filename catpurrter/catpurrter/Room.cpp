@@ -11,6 +11,19 @@ Room::Room(sf::Font& font, Player& player)
     init();
 }
 
+std::string Room::getNearbyObject() const {
+    if (highlightedIndex != -1)
+        return objects[static_cast<size_t>(highlightedIndex)].name;
+    return "";
+}
+
+const Room::RoomObject* Room::getHighlightedObject() const {
+    if (highlightedIndex >= 0 && highlightedIndex < static_cast<int>(objects.size()))
+        return &objects[highlightedIndex];
+    return nullptr;
+}
+
+
 void Room::init() {
     // Load room background texture
     if (!backgroundTexture.loadFromFile("assets/graphics/room.png")) {
@@ -31,7 +44,34 @@ void Room::init() {
     objects.push_back(createStorageRack());
     objects.push_back(createShelves());
     objects.push_back(createDoors());
+
+    // -------- Load Decoration Textures (for small icons) --------
+    decorationTextures.clear();
+    // If you have a known set of ids:
+    std::vector<std::string> decoIds = { "car", "books", "plant", "picture" };
+    for (const auto& id : decoIds) {
+        sf::Texture tex;
+        std::string path = "assets/graphics/shelves/" + id + "small.png";
+        if (tex.loadFromFile(path)) {
+            decorationTextures[id] = std::move(tex);
+        }
+        else {
+            std::cout << "Failed to load shelf decoration: " << path << "\n";
+        }
+    }
+
+    hatTextures.clear();
+    std::vector<std::string> hatIds = { "crown", "pirate", "froggy", "wizard" };
+    for (const auto& id : hatIds) {
+        sf::Texture tex;
+        std::string path = "assets/graphics/storagerack/" + id + "small.png";
+        if (tex.loadFromFile(path)) {
+            hatTextures[id] = std::move(tex);
+        }
+    }
+
 }
+
 
 
 
@@ -70,65 +110,104 @@ void Room::handleInput(sf::Keyboard::Key key) {
 
 void Room::update() {
     highlightedIndex = -1;
-    float minDist = 70.f;
+    float interactRange = 40.f; // Increase if needed!
     sf::Vector2f playerFeet = playerRect.getPosition();
     playerFeet.x += playerRect.getSize().x / 2;
     playerFeet.y += playerRect.getSize().y;
 
     for (size_t i = 0; i < objects.size(); ++i) {
         sf::FloatRect objBounds = objects[i].rect.getGlobalBounds();
-        // Option 1: If feet are inside object rectangle (for solid/clickable objects)
-        if (objBounds.contains(playerFeet)) {
-            highlightedIndex = static_cast<int>(i);
-            break;
-        }
-        // Option 2: Use proximity if you prefer (for non-solid, e.g., wall-hanging shelves)
-        float dx = playerFeet.x - (objBounds.left + objBounds.width / 2);
-        float dy = playerFeet.y - (objBounds.top + objBounds.height / 2);
+
+        // Check if player FEET are within interaction range (allow a buffer zone)
+        float dx = std::max(objBounds.left - playerFeet.x, std::max(0.f, playerFeet.x - (objBounds.left + objBounds.width)));
+        float dy = std::max(objBounds.top - playerFeet.y, std::max(0.f, playerFeet.y - (objBounds.top + objBounds.height)));
         float dist = std::sqrt(dx * dx + dy * dy);
-        if (dist < minDist) {
+
+        if (dist < interactRange) {
             highlightedIndex = static_cast<int>(i);
             break;
         }
     }
-
 }
 
+
 void Room::render(sf::RenderWindow& window) {
-    window.draw(backgroundSprite);  // Draw background first!
+    window.draw(backgroundSprite); // Draw background
 
-    // Draw all room objects (highlight, etc.)
-    for (size_t i = 0; i < objects.size(); ++i)
-    {
-        auto& obj = objects[i];
-           window.draw(obj.rect);
+    // 1. Draw all room objects (except storage rack)
+    for (size_t i = 0; i < objects.size(); ++i) {
+        if (i == Room::STORAGE_RACK) continue; // Skip storage rack for now
+        window.draw(objects[i].rect);
 
-        // Draw label
-        sf::Text label(obj.name, font, 18);
+        // Draw label for other objects (optional)
+        sf::Text label(objects[i].name, font, 18);
         label.setFillColor(sf::Color::White);
-        label.setPosition(obj.rect.getPosition().x, obj.rect.getPosition().y - 22);
+        label.setPosition(objects[i].rect.getPosition().x, objects[i].rect.getPosition().y - 22);
         window.draw(label);
     }
 
-    if (isNearObject()) {
-        // Draw interact label at top
+    // 2. Draw shelf decorations (as before)
+    std::vector<sf::Vector2f> shelfPositions = {
+        {580.f, 75.f},  {660.f, 75.f},
+        {580.f, 155.f}, {660.f, 155.f}
+    };
+    int decoIdx = 0;
+    for (const auto& decoId : playerData.ownedDecorations) {
+        if (decoIdx >= static_cast<int>(shelfPositions.size())) break;
+        auto it = decorationTextures.find(decoId);
+        if (it != decorationTextures.end()) {
+            sf::Sprite decoSprite;
+            decoSprite.setTexture(it->second);
+            decoSprite.setPosition(shelfPositions[decoIdx]);
+            window.draw(decoSprite);
+        }
+        decoIdx++;
+    }
+
+    // 3. Draw player (BEFORE rack and hats!)
+    window.draw(playerRect);
+
+    // 4. Draw storage rack above player
+    window.draw(objects[Room::STORAGE_RACK].rect);
+
+    // 5. Draw hats on rack above player
+    std::vector<sf::Vector2f> rackPositions = {
+        {45.f,  420.f},  // Top Left
+        {105.f, 420.f},  // Top Right
+        {45.f,  480.f},  // Bottom Left
+        {105.f, 480.f}   // Bottom Right
+    };
+    int hatIdx = 0;
+    for (const auto& hatId : playerData.unlockedHats) {
+        if (hatIdx >= rackPositions.size()) break;
+        auto it = hatTextures.find(hatId);
+        if (it != hatTextures.end()) {
+            sf::Sprite hatSprite;
+            hatSprite.setTexture(it->second);
+            hatSprite.setPosition(rackPositions[hatIdx]);
+            window.draw(hatSprite);
+        }
+        hatIdx++;
+    }
+
+    // 6. Draw interact label and 30x30 square (on top of all)
+    if (const RoomObject* obj = getHighlightedObject()) {
+        // Draw label at top center
         sf::Text interactText;
         interactText.setFont(font);
         interactText.setCharacterSize(32);
         interactText.setFillColor(sf::Color::Yellow);
-        interactText.setString(">" + getNearbyObject() + "<");
+        interactText.setString(">" + obj->name + "<");
         sf::FloatRect textRect = interactText.getLocalBounds();
         interactText.setOrigin(textRect.width / 2, 0);
         interactText.setPosition(window.getSize().x / 2.f, 20.f);
         window.draw(interactText);
 
-        // Draw a 50x50px square above the interactable object, centered
-        const auto& obj = objects[static_cast<size_t>(highlightedIndex)];
-        sf::Vector2f objPos = obj.rect.getPosition();
-        sf::Vector2f objSize = obj.rect.getSize();
+        // Draw 30x30px square above the object, centered
+        sf::Vector2f objPos = obj->rect.getPosition();
+        sf::Vector2f objSize = obj->rect.getSize();
 
         sf::RectangleShape interactSquare({ 30.f, 30.f });
-        // Center horizontally above object, and put 50px above object top
         interactSquare.setPosition(
             objPos.x + objSize.x / 2.f - 15.f,
             objPos.y - 50.f
@@ -138,46 +217,85 @@ void Room::render(sf::RenderWindow& window) {
         interactSquare.setOutlineThickness(2.f);
         window.draw(interactSquare);
     }
-
-
-
-    // Draw player
-    window.draw(playerRect);
 }
 
-// Utility to check if player is near/interacting
-bool Room::isNearObject() const { return highlightedIndex != -1; }
-std::string Room::getNearbyObject() const {
-    if (highlightedIndex != -1)
-        return objects[static_cast<size_t>(highlightedIndex)].name;
-    return "";
+
+
+
+bool Room::isNearObject() const {
+    sf::FloatRect playerBounds(playerRect.getPosition().x, playerRect.getPosition().y, playerRect.getSize().x, playerRect.getSize().y);
+    const float INTERACT_DISTANCE = 32.f; // or bigger
+
+    for (size_t i = 0; i < objects.size(); ++i) {
+        sf::FloatRect objBounds = objects[i].rect.getGlobalBounds();
+        // Expand object bounds by INTERACT_DISTANCE in all directions
+        objBounds.left -= INTERACT_DISTANCE;
+        objBounds.top -= INTERACT_DISTANCE;
+        objBounds.width += 2 * INTERACT_DISTANCE;
+        objBounds.height += 2 * INTERACT_DISTANCE;
+
+        if (objBounds.intersects(playerBounds)) {
+            // Save i as the highlighted object, etc.
+            return true;
+        }
+    }
+    return false;
 }
+
 
 void Room::movePlayer(int dx, int dy) {
-    sf::Vector2f delta{ static_cast<float>(dx) * playerSpeed, static_cast<float>(dy) * playerSpeed };
-    playerPos += delta;
-
-    // Clamp to room bounds
+    sf::Vector2f oldPos = playerPos;
     float playerWidth = playerRect.getSize().x;
     float playerHeight = playerRect.getSize().y;
+
     float minX = 0.f, maxX = 800.f;
     float minFeetY = 350.f, maxFeetY = 585.f;
 
-    if (playerPos.x < minX) {
-        playerPos.x = minX;
+    // Try X movement first
+    playerPos.x += dx * playerSpeed;
+    // Clamp
+    if (playerPos.x < minX) playerPos.x = minX;
+    if (playerPos.x + playerWidth > maxX) playerPos.x = maxX - playerWidth;
+
+    // Check X collision (only feet)
+    sf::FloatRect feetBoxX(playerPos.x, playerPos.y + playerHeight - 2, playerWidth, 2);
+    sf::FloatRect computerBounds = objects[Room::COMPUTER].rect.getGlobalBounds();
+    if (computerBounds.intersects(feetBoxX)) {
+        // Don't move in X if this move causes a new collision
+        playerPos.x = oldPos.x;
     }
-    if (playerPos.x + playerWidth > maxX) {
-        playerPos.x = maxX - playerWidth;
-    }
-    if (playerPos.y + playerHeight < minFeetY) {
-        playerPos.y = minFeetY - playerHeight;
-    }
-    if (playerPos.y + playerHeight > maxFeetY) {
-        playerPos.y = maxFeetY - playerHeight;
+
+    // Try Y movement
+    playerPos.y += dy * playerSpeed;
+    // Clamp (feet)
+    if (playerPos.y + playerHeight < minFeetY) playerPos.y = minFeetY - playerHeight;
+    if (playerPos.y + playerHeight > maxFeetY) playerPos.y = maxFeetY - playerHeight;
+
+    sf::FloatRect feetBoxY(playerPos.x, playerPos.y + playerHeight - 2, playerWidth, 2);
+    if (computerBounds.intersects(feetBoxY)) {
+        playerPos.y = oldPos.y;
     }
 
     playerRect.setPosition(playerPos);
+
+    sf::FloatRect rackFull = objects[Room::STORAGE_RACK].rect.getGlobalBounds();
+    sf::FloatRect rackBottom(
+        rackFull.left,
+        rackFull.top + rackFull.height - 40,
+        rackFull.width,
+        40
+    );
+    sf::FloatRect playerFeet(playerPos.x, playerPos.y + playerHeight - 2, playerWidth, 2);
+    if (rackBottom.intersects(playerFeet)) {
+        playerPos = oldPos;
+        playerRect.setPosition(playerPos);
+        return;
+    }
 }
+
+
+
+
 
 Room::RoomObject Room::createComputer() {
     RoomObject obj;
@@ -269,3 +387,4 @@ Room::RoomObject Room::createDoors() {
     obj.name = "Doors";
     return obj;
 }
+

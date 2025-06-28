@@ -6,21 +6,41 @@ Shelf::Shelf(const sf::Font& font, Player& player)
 }
 
 void Shelf::init() {
-    decorationTexts.clear();
-    selectionIndex = 0;
-
-    float y = 200.f;
-    for (const std::string& item : playerData.ownedDecorations) {
-        sf::Text text;
-        text.setFont(font);
-        text.setString(item);
-        text.setCharacterSize(30);
-        text.setFillColor(sf::Color::White);
-        text.setPosition(100.f, y);
-        decorationTexts.push_back(text);
-        y += 50.f;
+    // Load shelf closeup background
+    if (!shelfBackgroundTexture.loadFromFile("assets/graphics/shelves/shelvesclose.png")) {
+        std::cout << "Failed to load shelvesclose.png!\n";
     }
+    shelfBackgroundSprite.setTexture(shelfBackgroundTexture);
+
+    // Prepare big decoration sprites
+    bigDecorationTextures.clear();
+    bigDecorationSprites.clear();
+
+    // Example shelf positions (adjust as needed)
+ std::vector<sf::Vector2f> shelfPositions = {
+    {170.f, 25.f},   // Position for first item (left, top shelf)
+    {400.f, 25.f},   // Position for second item (right, top shelf)
+    {170.f, 255.f},  // Position for third item (left, bottom shelf)
+    {400.f, 255.f}   // Position for fourth item (right, bottom shelf)
+};
+
+    int idx = 0;
+    for (const std::string& decoId : playerData.ownedDecorations) {
+        std::string path = "assets/graphics/shelves/" + decoId + "big.png";
+        sf::Texture tex;
+        if (tex.loadFromFile(path)) {
+            bigDecorationTextures[decoId] = tex;
+            sf::Sprite spr(bigDecorationTextures[decoId]);
+            if (idx < shelfPositions.size())
+                spr.setPosition(shelfPositions[idx]);
+            bigDecorationSprites.push_back(spr);
+        }
+        ++idx;
+    }
+
+    selectionIndex = 0;
 }
+
 
 void Shelf::update() {
     for (size_t i = 0; i < decorationTexts.size(); ++i) {
@@ -29,18 +49,27 @@ void Shelf::update() {
 }
 
 void Shelf::render(sf::RenderWindow& window) {
+    // Draw the closeup shelf background
+    window.draw(shelfBackgroundSprite);
+
+    // Draw big decoration sprites on the shelf
+    for (const auto& spr : bigDecorationSprites) {
+        window.draw(spr);
+    }
+
+    // Optionally: Draw title and navigation (optional)
     sf::Text title;
     title.setFont(font);
-    title.setString("Shelf Decorations");
+    title.setString("Your Shelf Decorations");
     title.setCharacterSize(30);
     title.setFillColor(sf::Color::Cyan);
-    title.setPosition(100.f, 30.f);
+    title.setPosition(40.f, 20.f);
     window.draw(title);
 
-    for (const auto& item : decorationTexts) {
-        window.draw(item);
-    }
+    // Optionally: Highlight current selection (if you want navigation)
+    // You can draw a yellow box or change sprite tint for the selected decoration if desired.
 }
+
 
 void Shelf::handleInput(sf::Keyboard::Key key) {
     if (key == sf::Keyboard::Escape) {

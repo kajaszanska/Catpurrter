@@ -38,6 +38,10 @@ public:
     GameManager();
     void run();
 
+    void setState(GameState state); 
+
+    GameState getState() const;
+
     void drawSectionTitle(sf::RenderWindow& window, sf::Font& font, const std::string& title);
     void drawCoinDisplay(sf::RenderWindow& window, sf::Font& font, int coins, sf::Vector2f pos = { 500.f, 50.f });
 
@@ -46,6 +50,8 @@ private:
     sf::Font font;
     std::vector<sf::Text> menuItems;
     int selectedIndex;
+
+    GameState currentState;
 
     GameState state;
     Player playerData;

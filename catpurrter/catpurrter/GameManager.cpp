@@ -106,7 +106,7 @@ void GameManager::processEvents() {
                         else if (obj == "Storage Rack") {
                             state = GameState::StorageView;
                             if (storageRackView) delete storageRackView;
-                            storageRackView = new StorageRack(font, playerData);
+                            storageRackView = new StorageRack(font, playerData, this);
                             storageRackView->init();
                             std::cout << "Entered Storage Rack\n";
                         }
@@ -418,7 +418,7 @@ void GameManager::selectOption() {
         playerData = Player(); // Reset all values
         playerData.coins = 100;
         playerData.equippedHat = "none";
-        playerData.unlockedHats = { "cap", "crown" }; // default hats
+        playerData.unlockedHats = {""}; // default hats
         playerData.saveToFile("save.json");
 
         if (roomView) delete roomView;
@@ -530,4 +530,11 @@ void GameManager::handleContinuousMovement() {
         if (dx != 0 || dy != 0)
             roomView->movePlayer(dx, dy);
     }
+}
+
+void GameManager::setState(GameState state) {
+    currentState = state;
+}
+GameState GameManager::getState() const {
+    return currentState;
 }
