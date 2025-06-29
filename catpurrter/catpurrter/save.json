@@ -1,7 +1,13 @@
 {
-    "aquariumContents": [],
-    "coins": 7920,
-    "equippedHat": "crown",
+    "aquariumContents": [
+        "plant",
+        "castle",
+        "fish1",
+        "fish2",
+        "fish3"
+    ],
+    "coins": 6120,
+    "equippedHat": "wizard",
     "ownedDecorations": [
         "car",
         "picture",

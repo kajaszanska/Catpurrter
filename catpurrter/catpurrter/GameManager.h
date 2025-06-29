@@ -38,6 +38,9 @@ public:
     GameManager();
     void run();
 
+    Room* getRoomView() { return roomView; }
+
+
     void setState(GameState state); 
 
     GameState getState() const;
@@ -51,6 +54,8 @@ private:
     std::vector<sf::Text> menuItems;
     int selectedIndex;
 
+    
+
     GameState currentState;
 
     GameState state;
@@ -61,7 +66,7 @@ private:
 
 
     void processEvents();
-    void update();
+    void update(float dt);
     void render();
 
     void renderStartMenu();
@@ -103,7 +108,8 @@ private:
     std::vector<std::pair<sf::Text, ShopCategory>> shopCategoryOptions;
     int shopCategoryIndex = 0;
 
-    
+    sf::Clock frameClock;
+
 
     Room* roomView = nullptr;
     Aquarium* aquariumView = nullptr;

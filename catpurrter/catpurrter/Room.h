@@ -39,6 +39,31 @@ public:
         DOORS = 4
     };
 
+    sf::Texture aquariumSmTexture;     // aquarium.png (default room view)
+    sf::Texture aquariumSmPlants;      // aquariumplantssmall.png (room view, plant only)
+    sf::Texture aquariumSmCastle;      // aquariumcastlesmall.png (room view, castle only)
+    sf::Texture aquariumSmAll;         // aquariumallsmall.png (room view, both)
+
+    struct FishVisual {
+        std::string id;
+        sf::Vector2f position;
+        sf::Vector2f velocity;
+        bool facingRight = true;
+        float directionTimer = 0.f;
+        float minSwimDistance = 0.f;
+        float distanceSinceDirectionChange = 0.f;
+        float verticalSwimTimer = 0.f; 
+    };
+
+   
+
+
+    std::vector<FishVisual> fishes;
+
+
+    std::unordered_map<std::string, sf::Texture> fishTextures;
+
+
 
 private:
     sf::Font& font;
@@ -75,4 +100,8 @@ private:
     std::map<std::string, sf::Texture> decorationTextures;
 
     std::map<std::string, sf::Texture> hatTextures;
+
+    std::unordered_map<std::string, sf::Texture> aquariumItemTextures;
+
+
 };

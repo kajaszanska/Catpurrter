@@ -3,7 +3,18 @@
 #include <iostream>
 #include <cmath>
 #include <memory>
+#include <random>
 
+
+// Room aquarium area for fish movement (ADJUST HERE)
+const float ROOM_AQUARIUM_LEFT = 590.f;
+const float ROOM_AQUARIUM_TOP = 440.f;
+const float ROOM_AQUARIUM_RIGHT = 730.f;
+const float ROOM_AQUARIUM_BOTTOM = 495.f;
+
+// Fish image size (adjust if needed, or get from texture if you want)
+const float FISH_ROOM_WIDTH = 33.f;
+const float FISH_ROOM_HEIGHT = 21.f;
 
 
 Room::Room(sf::Font& font, Player& player)
@@ -25,19 +36,19 @@ const Room::RoomObject* Room::getHighlightedObject() const {
 
 
 void Room::init() {
-    // Load room background texture
+    // --- Load room background texture ---
     if (!backgroundTexture.loadFromFile("assets/graphics/room.png")) {
         std::cout << "Failed to load room background image!\n";
     }
     backgroundSprite.setTexture(backgroundTexture);
 
-    // Player starting position
+    // --- Player starting position ---
     playerPos = { 100, 300 };
     playerRect.setSize({ 40, 60 });
     playerRect.setFillColor(sf::Color::Green);
     playerRect.setPosition(playerPos);
 
-    // Define and create room objects
+    // --- Define and create room objects ---
     objects.clear();
     objects.push_back(createComputer());
     objects.push_back(createAquarium());
@@ -45,9 +56,8 @@ void Room::init() {
     objects.push_back(createShelves());
     objects.push_back(createDoors());
 
-    // -------- Load Decoration Textures (for small icons) --------
+    // --- Load Decoration Textures (shelves) ---
     decorationTextures.clear();
-    // If you have a known set of ids:
     std::vector<std::string> decoIds = { "car", "books", "plant", "picture" };
     for (const auto& id : decoIds) {
         sf::Texture tex;
@@ -60,6 +70,7 @@ void Room::init() {
         }
     }
 
+    // --- Load Hat Textures (storage rack) ---
     hatTextures.clear();
     std::vector<std::string> hatIds = { "crown", "pirate", "froggy", "wizard" };
     for (const auto& id : hatIds) {
@@ -70,8 +81,55 @@ void Room::init() {
         }
     }
 
-}
+    // --- Load Aquarium small backgrounds (plant, castle, both, none) ---
+    aquariumSmTexture.loadFromFile("assets/graphics/aquarium/aquarium.png");
+    aquariumSmPlants.loadFromFile("assets/graphics/aquarium/aquariumplantssmall.png");
+    aquariumSmCastle.loadFromFile("assets/graphics/aquarium/aquariumcastlesmall.png");
+    aquariumSmAll.loadFromFile("assets/graphics/aquarium/aquariumallsmall.png");
 
+    // --- Load fish textures ---
+    fishTextures.clear();
+    std::vector<std::string> fishIds = { "fish1", "fish2", "fish3" };
+    for (const auto& id : fishIds) {
+        sf::Texture texRight, texLeft;
+        if (texRight.loadFromFile("assets/graphics/aquarium/" + id + "rightsmall.png"))
+            fishTextures[id + "rightsmall"] = std::move(texRight);
+        if (texLeft.loadFromFile("assets/graphics/aquarium/" + id + "leftsmall.png"))
+            fishTextures[id + "leftsmall"] = std::move(texLeft);
+    }
+
+    // --- Setup fish visuals based on bought fish ---
+    fishes.clear();
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    // Spawn range: always inside area, never touching the border!
+    std::uniform_real_distribution<float> xDist(
+        ROOM_AQUARIUM_LEFT + FISH_ROOM_WIDTH / 2,
+        ROOM_AQUARIUM_RIGHT - FISH_ROOM_WIDTH / 2
+    );
+    std::uniform_real_distribution<float> yDist(
+        ROOM_AQUARIUM_TOP + FISH_ROOM_HEIGHT / 2,
+        ROOM_AQUARIUM_BOTTOM - FISH_ROOM_HEIGHT / 2
+    );
+    // Make the fish swim *slow* (tweak these as you want)
+    std::uniform_real_distribution<float> vxDist(0.2f, 0.8f);
+
+
+    for (const auto& id : fishIds) {
+        if (std::find(playerData.aquariumContents.begin(), playerData.aquariumContents.end(), id) != playerData.aquariumContents.end()) {
+            FishVisual fish;
+            fish.id = id;
+            fish.facingRight = (gen() % 2 == 0);
+            fish.position = sf::Vector2f(xDist(gen), yDist(gen));
+            float vx = vxDist(gen) * (fish.facingRight ? 1.f : -1.f);
+            fish.velocity = { vx, 0.f };
+            fish.minSwimDistance = 25.f + (gen() % 20);     // lower for smaller aquarium!
+            fish.directionTimer = 0.7f + float(gen() % 200) / 100.0f;
+            fishes.push_back(fish);
+        }
+    }
+
+}
 
 
 
@@ -89,15 +147,13 @@ void Room::handleInput(sf::Keyboard::Key key) {
 
 void Room::update() {
     highlightedIndex = -1;
-    float interactRange = 40.f; // Increase if needed!
+    float interactRange = 40.f;
     sf::Vector2f playerFeet = playerRect.getPosition();
     playerFeet.x += playerRect.getSize().x / 2;
     playerFeet.y += playerRect.getSize().y;
 
     for (size_t i = 0; i < objects.size(); ++i) {
         sf::FloatRect objBounds = objects[i].rect.getGlobalBounds();
-
-        // Check if player FEET are within interaction range (allow a buffer zone)
         float dx = std::max(objBounds.left - playerFeet.x, std::max(0.f, playerFeet.x - (objBounds.left + objBounds.width)));
         float dy = std::max(objBounds.top - playerFeet.y, std::max(0.f, playerFeet.y - (objBounds.top + objBounds.height)));
         float dist = std::sqrt(dx * dx + dy * dy);
@@ -107,15 +163,93 @@ void Room::update() {
             break;
         }
     }
+
+    for (auto& fish : fishes) {
+        // --- Get actual texture size ---
+        std::string texKey = fish.id + (fish.facingRight ? "rightsmall" : "leftsmall");
+        float fishWidth = 33.f, fishHeight = 21.f; // fallback
+        auto it = fishTextures.find(texKey);
+        if (it != fishTextures.end()) {
+            fishWidth = it->second.getSize().x;
+            fishHeight = it->second.getSize().y;
+        }
+
+        // --- Move fish ---
+        fish.position += fish.velocity * 0.016f;
+        fish.distanceSinceDirectionChange += std::abs(fish.velocity.x * 0.016f) + std::abs(fish.velocity.y * 0.016f);
+
+        // --- Clamp position so center always stays inside ---
+        bool clampedX = false, clampedY = false;
+        if (fish.position.x < ROOM_AQUARIUM_LEFT + fishWidth / 2) {
+            fish.position.x = ROOM_AQUARIUM_LEFT + fishWidth / 2;
+            clampedX = true;
+        }
+        if (fish.position.x > ROOM_AQUARIUM_RIGHT - fishWidth / 2) {
+            fish.position.x = ROOM_AQUARIUM_RIGHT - fishWidth / 2;
+            clampedX = true;
+        }
+        if (fish.position.y < ROOM_AQUARIUM_TOP + fishHeight / 2) {
+            fish.position.y = ROOM_AQUARIUM_TOP + fishHeight / 2;
+            clampedY = true;
+        }
+        if (fish.position.y > ROOM_AQUARIUM_BOTTOM - fishHeight / 2) {
+            fish.position.y = ROOM_AQUARIUM_BOTTOM - fishHeight / 2;
+            clampedY = true;
+        }
+
+        // If clamped X, reverse X direction and reset distance
+        if (clampedX) {
+            fish.velocity.x *= -1.f;
+            fish.facingRight = (fish.velocity.x > 0);
+            fish.distanceSinceDirectionChange = 0.f;
+        }
+        // If clamped Y, stop Y movement and reset timer
+        if (clampedY) {
+            fish.velocity.y = 0.f; // stop vertical movement!
+            fish.verticalSwimTimer = 0.f;
+            fish.distanceSinceDirectionChange = 0.f;
+        }
+
+        // --- Direction change logic ---
+        fish.directionTimer -= 0.016f;
+        bool canChangeDir = (fish.distanceSinceDirectionChange > fish.minSwimDistance);
+
+        // Only allow new Y direction if fish is not already swimming vertically
+        if (canChangeDir && fish.directionTimer < 0) {
+            // 10% chance to flip horizontal
+            if ((rand() % 10) == 0) {
+                fish.velocity.x *= -1.f;
+                fish.facingRight = (fish.velocity.x > 0);
+                fish.distanceSinceDirectionChange = 0.f;
+            }
+            // 35% chance to nudge vertical ONLY if not already moving vertically
+            if (fish.velocity.y == 0.f && (rand() % 3) == 0) {
+                float speedY = 0.02f + float(rand() % 5) * 0.02f; // 2–6 px/sec, SLOW for small aquarium
+                fish.velocity.y = (rand() % 2 ? 1.f : -1.f) * speedY;
+                fish.verticalSwimTimer = 0.9f + float(rand() % 40) / 100.f; // 0.6–1.0 sec up/down
+                fish.distanceSinceDirectionChange = 0.f;
+            }
+            fish.directionTimer = 0.45f + float(rand() % 130) / 100.0f;
+        }
+
+        // --- End vertical movement after timer ---
+        if (fish.verticalSwimTimer > 0.f) {
+            fish.verticalSwimTimer -= 0.016f;
+            if (fish.verticalSwimTimer <= 0.f) {
+                fish.velocity.y = 0.f;
+            }
+        }
+    }
 }
+
 
 
 void Room::render(sf::RenderWindow& window) {
     window.draw(backgroundSprite); // Draw background
 
-    // 1. Draw all room objects (except storage rack)
+    // 1. Draw all room objects except aquarium and storage rack
     for (size_t i = 0; i < objects.size(); ++i) {
-        if (i == Room::STORAGE_RACK) continue; // Skip storage rack for now
+        if (i == Room::STORAGE_RACK || i == Room::AQUARIUM) continue; // we'll draw them dynamically
         window.draw(objects[i].rect);
 
         // Draw label for other objects (optional)
@@ -143,13 +277,78 @@ void Room::render(sf::RenderWindow& window) {
         decoIdx++;
     }
 
-    // --- Dynamic draw order for player and rack ---
-    // Get player "feet" and rack collision Y
+    // --- Draw aquarium and player in correct order ---
+    const auto& aquariumObj = objects[Room::AQUARIUM];
     float playerFeetY = playerRect.getPosition().y + playerRect.getSize().y;
-    const auto& rackObj = objects[Room::STORAGE_RACK];
-    float rackCollisionY = rackObj.rect.getPosition().y + rackObj.rect.getSize().y - 40.f;
+    float aquariumCollisionY = aquariumObj.rect.getPosition().y + aquariumObj.rect.getSize().y - 40.f;
 
-    // Positions for hats on rack
+    // Choose correct aquarium background texture
+    sf::Sprite aquariumBgSprite;
+    bool hasPlant = false, hasCastle = false;
+    for (const auto& item : playerData.aquariumContents) {
+        if (item == "plant") hasPlant = true;
+        if (item == "castle") hasCastle = true;
+    }
+    if (hasPlant && hasCastle)
+        aquariumBgSprite.setTexture(aquariumSmAll);
+    else if (hasPlant)
+        aquariumBgSprite.setTexture(aquariumSmPlants);
+    else if (hasCastle)
+        aquariumBgSprite.setTexture(aquariumSmCastle);
+    else
+        aquariumBgSprite.setTexture(aquariumSmTexture);
+
+    aquariumBgSprite.setPosition(aquariumObj.rect.getPosition());
+
+    // --- Draw in the correct order ---
+    if (playerFeetY < aquariumCollisionY) {
+        // Player is behind aquarium
+        window.draw(playerRect);
+        window.draw(aquariumBgSprite);
+
+        // Draw fish (room view, behind glass)
+        for (const auto& fish : fishes) {
+            std::string texKey = fish.id + (fish.facingRight ? "rightsmall" : "leftsmall");
+            auto it = fishTextures.find(texKey);
+            if (it != fishTextures.end()) {
+                float fishWidth = it->second.getSize().x;
+                float fishHeight = it->second.getSize().y;
+                sf::Sprite fishSprite;
+                fishSprite.setTexture(it->second);
+                fishSprite.setOrigin(fishWidth / 2.f, fishHeight / 2.f); // <-- Fix: center origin
+                fishSprite.setPosition(fish.position);                   // <-- Fix: position = center
+                window.draw(fishSprite);
+            }
+        }
+        // window.draw(aquariumObj.rect); // Optional: glass overlay
+    }
+    else {
+        window.draw(aquariumBgSprite);
+
+        // Draw fish (room view, behind glass)
+        for (const auto& fish : fishes) {
+            std::string texKey = fish.id + (fish.facingRight ? "rightsmall" : "leftsmall");
+            auto it = fishTextures.find(texKey);
+            if (it != fishTextures.end()) {
+                float fishWidth = it->second.getSize().x;
+                float fishHeight = it->second.getSize().y;
+                sf::Sprite fishSprite;
+                fishSprite.setTexture(it->second);
+                fishSprite.setOrigin(fishWidth / 2.f, fishHeight / 2.f); // <-- Fix: center origin
+                fishSprite.setPosition(fish.position);                   // <-- Fix: position = center
+                window.draw(fishSprite);
+            }
+        }
+        // window.draw(aquariumObj.rect); // Optional: glass overlay
+        window.draw(playerRect);
+    }
+
+
+
+    // --- Draw storage rack (always on top of player and aquarium), with hats in slots ---
+    const auto& rackObj = objects[Room::STORAGE_RACK];
+    window.draw(rackObj.rect);
+
     std::vector<sf::Vector2f> rackPositions = {
         {45.f,  420.f},
         {105.f, 420.f},
@@ -157,35 +356,23 @@ void Room::render(sf::RenderWindow& window) {
         {105.f, 480.f}
     };
 
-    // Helper to draw rack & hats
-    auto drawRackAndHats = [&]() {
-        window.draw(rackObj.rect);
-        int hatIdx = 0;
-        for (const auto& hatId : playerData.unlockedHats) {
-            if (hatIdx >= rackPositions.size()) break;
-            auto it = hatTextures.find(hatId);
-            if (it != hatTextures.end()) {
-                sf::Sprite hatSprite;
-                hatSprite.setTexture(it->second);
-                hatSprite.setPosition(rackPositions[hatIdx]);
-                window.draw(hatSprite);
-            }
-            hatIdx++;
+    // Loop over slots (positions), not just hats!
+    for (size_t i = 0; i < rackPositions.size(); ++i) {
+        if (i >= playerData.unlockedHats.size()) break;
+        const auto& hatId = playerData.unlockedHats[i];
+        // Skip equipped hat (leave empty slot)
+        if (hatId == playerData.equippedHat) continue;
+
+        auto it = hatTextures.find(hatId);
+        if (it != hatTextures.end()) {
+            sf::Sprite hatSprite;
+            hatSprite.setTexture(it->second);
+            hatSprite.setPosition(rackPositions[i]);
+            window.draw(hatSprite);
         }
-        };
-
-    if (playerFeetY < rackCollisionY) {
-        // Player is behind rack
-        window.draw(playerRect);
-        drawRackAndHats();
-    }
-    else {
-        // Player is in front of rack
-        drawRackAndHats();
-        window.draw(playerRect);
     }
 
-    // 4. Draw interact label and 30x30 square (on top of all)
+    // --- Draw interact label and square (unchanged) ---
     if (const RoomObject* obj = getHighlightedObject()) {
         // Draw label at top center
         sf::Text interactText;
@@ -213,6 +400,7 @@ void Room::render(sf::RenderWindow& window) {
         window.draw(interactSquare);
     }
 }
+
 
 
 
@@ -257,6 +445,7 @@ void Room::movePlayer(int dx, int dy) {
         // Check collisions
         {
             sf::FloatRect computerBounds = objects[Room::COMPUTER].rect.getGlobalBounds();
+            // STORAGE RACK
             sf::FloatRect rackFull = objects[Room::STORAGE_RACK].rect.getGlobalBounds();
             sf::FloatRect rackBottom(
                 rackFull.left,
@@ -264,7 +453,17 @@ void Room::movePlayer(int dx, int dy) {
                 rackFull.width,
                 40
             );
-            if (computerBounds.intersects(feetBox) || rackBottom.intersects(feetBox))
+            // AQUARIUM
+            sf::FloatRect aquariumFull = objects[Room::AQUARIUM].rect.getGlobalBounds();
+            sf::FloatRect aquariumBottom(
+                aquariumFull.left,
+                aquariumFull.top + aquariumFull.height - 40,
+                aquariumFull.width,
+                40
+            );
+            if (computerBounds.intersects(feetBox) ||
+                rackBottom.intersects(feetBox) ||
+                aquariumBottom.intersects(feetBox))
                 blockX = true;
         }
         if (!blockX) playerPos.x = newX;
@@ -282,6 +481,7 @@ void Room::movePlayer(int dx, int dy) {
         // Check collisions
         {
             sf::FloatRect computerBounds = objects[Room::COMPUTER].rect.getGlobalBounds();
+            // STORAGE RACK
             sf::FloatRect rackFull = objects[Room::STORAGE_RACK].rect.getGlobalBounds();
             sf::FloatRect rackBottom(
                 rackFull.left,
@@ -289,7 +489,17 @@ void Room::movePlayer(int dx, int dy) {
                 rackFull.width,
                 40
             );
-            if (computerBounds.intersects(feetBox) || rackBottom.intersects(feetBox))
+            // AQUARIUM
+            sf::FloatRect aquariumFull = objects[Room::AQUARIUM].rect.getGlobalBounds();
+            sf::FloatRect aquariumBottom(
+                aquariumFull.left,
+                aquariumFull.top + aquariumFull.height - 40,
+                aquariumFull.width,
+                40
+            );
+            if (computerBounds.intersects(feetBox) ||
+                rackBottom.intersects(feetBox) ||
+                aquariumBottom.intersects(feetBox))
                 blockY = true;
         }
         if (!blockY) playerPos.y = newY;
@@ -298,6 +508,7 @@ void Room::movePlayer(int dx, int dy) {
     // Final update
     playerRect.setPosition(playerPos);
 }
+
 
 
 

@@ -11,11 +11,12 @@ FishTankShopView::FishTankShopView(sf::Font& font, Player& player, GameManager& 
 
 void FishTankShopView::init() {
     items = {
-        { "goldfish", "Goldfish", 100 },
-        { "aquaticplant", "Aquatic Plant", 150 },
-        { "bubbletoy", "Bubble Toy", 200 }
+    { "plant", "Aquatic Plant", 100 },
+    { "castle", "Sand Castle", 150 },
+    { "fish1", "Gold Fish", 100 },
+    { "fish2", "Blue Tang", 100 },
+    { "fish3", "Puffer Fish", 100 }
     };
-
     itemTexts.clear();
     float y = 150.f;
     for (const auto& [id, label, price] : items) {
@@ -71,6 +72,9 @@ void FishTankShopView::handleInput(sf::Keyboard::Key key) {
             playerData.saveToFile("save.json");
             std::cout << "Bought: " << selectedId << "\n";
             updateOptionColors();
+            if (gameManager.getRoomView())
+                gameManager.getRoomView()->init();
+
         }
         else {
             std::cout << "Not enough coins\n";

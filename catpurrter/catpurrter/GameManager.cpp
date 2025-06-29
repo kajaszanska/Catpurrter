@@ -11,6 +11,8 @@
 #include <iostream>
 
 
+
+
 GameManager::GameManager()
     : window(sf::VideoMode(800, 600), "Catpurrter - Start Menu"), selectedIndex(0), state(GameState::StartMenu)
 {
@@ -23,12 +25,15 @@ GameManager::GameManager()
 
 void GameManager::run() {
     while (window.isOpen()) {
+        float dt = frameClock.restart().asSeconds();  
+
         processEvents();
-        handleContinuousMovement(); 
-        update();
+        handleContinuousMovement();
+        update(dt);    
         render();
     }
 }
+
 
 
 void GameManager::loadFont() {
@@ -313,7 +318,7 @@ void GameManager::processEvents() {
 }
 
 
-void GameManager::update() {
+void GameManager::update(float dt) {
     switch (state) {
     case GameState::StartMenu:
         updateStartMenu();
@@ -325,7 +330,7 @@ void GameManager::update() {
         if (computerView) computerView->update();
         break;
     case GameState::AquariumView:
-        if (aquariumView) aquariumView->update();
+        if (aquariumView) aquariumView->update(dt);
         break;
     case GameState::ShelfView:
         if (shelfView) shelfView->update();
