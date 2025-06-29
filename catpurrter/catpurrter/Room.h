@@ -106,7 +106,7 @@ private:
 
     // --- Player graphics ---
     sf::Sprite playerSprite;
-    std::map<std::string, sf::Texture> playerTextures; // Key: "up1", "up2", "down1", etc.
+    std::map<std::string, std::shared_ptr<sf::Texture>> playerTextures; // Key: "up1", "up2", "down1", etc.
 
     std::string playerDir = "down"; // "up", "down", "left", "right"
     int playerFrame = 1;

@@ -9,7 +9,7 @@ HatShopView::HatShopView(sf::Font& font, Player& player, GameManager& gm)
     hats = {
     {"crown", "Crown", 50},
     {"pirate", "Pirate Hat", 40},
-    {"froggy", "Froggy Hat", 30},
+    {"frog", "Froggy Hat", 30},
     {"wizard", "Wizard Hat", 35}
     };
 

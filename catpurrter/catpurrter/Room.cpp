@@ -50,20 +50,30 @@ void Room::init() {
 
     // --- Load player textures (default) ---
     playerTextures.clear();
-    for (const std::string& dir : { "down", "up", "left", "right" }) {
-        for (int f = 1; f <= 2; ++f) {
-            std::string key = dir + std::to_string(f);
-            std::string path = "assets/graphics/player/default/" + dir + std::to_string(f) + ".png";
-            if (!playerTextures[key].loadFromFile(path)) {
-                std::cout << "Missing player texture: " << path << std::endl;
+    std::vector<std::string> hats = { "default", "frog", "crown", "pirate", "wizard" };
+    for (const std::string& hat : hats) {
+        for (const std::string& dir : { "down", "up", "left", "right" }) {
+            for (int f = 1; f <= 2; ++f) {
+                std::string key = hat + "_" + dir + std::to_string(f); // eg: frog_left2
+                std::string path = "assets/graphics/player/" + hat + "/" + dir + std::to_string(f) + ".png";
+                auto tex = std::make_shared<sf::Texture>();
+                if (tex->loadFromFile(path)) {
+                    playerTextures[key] = tex;
+                }
+                else {
+                    if (hat == "default")
+                        std::cout << "Missing player texture: " << path << std::endl;
+                }
             }
         }
     }
+
+
     // Set up playerSprite to start with
     playerDir = "down";
     playerFrame = 1;
     animTimer = 0.f;
-    playerSprite.setTexture(playerTextures["down1"]);
+    playerSprite.setTexture(*playerTextures["default_down1"]);
     playerSprite.setPosition(playerPos);
 
     // --- Define and create room objects ---
@@ -90,7 +100,7 @@ void Room::init() {
 
     // --- Load Hat Textures (storage rack) ---
     hatTextures.clear();
-    std::vector<std::string> hatIds = { "crown", "pirate", "froggy", "wizard" };
+    std::vector<std::string> hatIds = { "crown", "pirate", "frog", "wizard" };
     for (const auto& id : hatIds) {
         sf::Texture tex;
         std::string path = "assets/graphics/storagerack/" + id + "small.png";
@@ -203,10 +213,22 @@ void Room::update() {
     else {
         playerFrame = 1; // Idle, always show frame 1
     }
-    std::string key = playerDir + std::to_string(playerFrame);
+    std::string hatKey = playerData.equippedHat.empty() ? "default" : playerData.equippedHat;
+    std::string key = hatKey + "_" + playerDir + std::to_string(playerFrame);
     auto it = playerTextures.find(key);
-    if (it != playerTextures.end())
-        playerSprite.setTexture(it->second);
+    // If missing, fall back to default
+    if (it != playerTextures.end()) {
+        playerSprite.setTexture(*it->second);
+    }
+    else {
+        std::string fallbackKey = "default_" + playerDir + std::to_string(playerFrame);
+        auto fallbackIt = playerTextures.find(fallbackKey);
+        if (fallbackIt != playerTextures.end()) {
+            playerSprite.setTexture(*fallbackIt->second);
+        }
+    }
+
+
 
     playerSprite.setPosition(playerPos);
 
