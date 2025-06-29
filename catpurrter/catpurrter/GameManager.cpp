@@ -421,9 +421,9 @@ void GameManager::selectOption() {
     case 0: // New Game
         std::cout << "New Game Selected\n";
         playerData = Player(); // Reset all values
-        playerData.coins = 100;
+        playerData.coins = 10000;
         playerData.equippedHat = "none";
-        playerData.unlockedHats = {""}; // default hats
+        playerData.unlockedHats = {}; // default hats
         playerData.saveToFile("save.json");
 
         if (roomView) delete roomView;

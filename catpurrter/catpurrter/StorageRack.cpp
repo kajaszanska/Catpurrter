@@ -95,11 +95,13 @@ void StorageRack::render(sf::RenderWindow& window) {
     info.setFont(font);
     info.setCharacterSize(28);
     info.setFillColor(sf::Color::White);
-    info.setString("Equipped: " + playerData.equippedHat);
+    // Replace the line below:
+    info.setString("Equipped: " + (playerData.equippedHat.empty() ? std::string("none") : playerData.equippedHat));
     sf::FloatRect textRect = info.getLocalBounds();
     info.setOrigin(textRect.width / 2.f, 0);
     info.setPosition(window.getSize().x / 2.f, 30.f); // Top center
     window.draw(info);
+
 }
 
 
@@ -138,9 +140,18 @@ void StorageRack::handleInput(sf::Keyboard::Key key) {
     // Enter to equip
     if (key == sf::Keyboard::Enter || key == sf::Keyboard::Space) {
         if (selectionIndex < hatsCount) {
-            playerData.equippedHat = playerData.unlockedHats[selectionIndex];
+            std::string selectedHat = playerData.unlockedHats[selectionIndex];
+            if (playerData.equippedHat == selectedHat) {
+                // Unwear hat
+                playerData.equippedHat = "";
+                std::cout << "Unequipped hat.\n";
+            }
+            else {
+                // Equip hat
+                playerData.equippedHat = selectedHat;
+                std::cout << "Equipped hat: " << playerData.equippedHat << std::endl;
+            }
             playerData.saveToFile("save.json");
-            std::cout << "Equipped hat: " << playerData.equippedHat << std::endl;
         }
     }
 }

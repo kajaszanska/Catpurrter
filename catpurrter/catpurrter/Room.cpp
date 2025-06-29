@@ -48,6 +48,24 @@ void Room::init() {
     playerRect.setFillColor(sf::Color::Green);
     playerRect.setPosition(playerPos);
 
+    // --- Load player textures (default) ---
+    playerTextures.clear();
+    for (const std::string& dir : { "down", "up", "left", "right" }) {
+        for (int f = 1; f <= 2; ++f) {
+            std::string key = dir + std::to_string(f);
+            std::string path = "assets/graphics/player/default/" + dir + std::to_string(f) + ".png";
+            if (!playerTextures[key].loadFromFile(path)) {
+                std::cout << "Missing player texture: " << path << std::endl;
+            }
+        }
+    }
+    // Set up playerSprite to start with
+    playerDir = "down";
+    playerFrame = 1;
+    animTimer = 0.f;
+    playerSprite.setTexture(playerTextures["down1"]);
+    playerSprite.setPosition(playerPos);
+
     // --- Define and create room objects ---
     objects.clear();
     objects.push_back(createComputer());
@@ -164,6 +182,35 @@ void Room::update() {
         }
     }
 
+    // --- Animate Player Sprite ---
+    float moveX = 0, moveY = 0;
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Left))  moveX = -1;
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) moveX = 1;
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Up))    moveY = -1;
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) || sf::Keyboard::isKeyPressed(sf::Keyboard::Down))  moveY = 1;
+
+    // Only update dir if actually moving
+    if (moveX != 0 || moveY != 0) {
+        if (std::abs(moveX) > std::abs(moveY)) playerDir = (moveX > 0) ? "right" : "left";
+        else playerDir = (moveY > 0) ? "down" : "up";
+        // Animation frame switching
+        animTimer += 0.016f; // assuming 60 FPS, otherwise pass dt!
+        if (animTimer >= animDelay) {
+            playerFrame = (playerFrame == 1) ? 2 : 1;
+            animTimer = 0.f;
+        }
+    }
+    else {
+        playerFrame = 1; // Idle, always show frame 1
+    }
+    std::string key = playerDir + std::to_string(playerFrame);
+    auto it = playerTextures.find(key);
+    if (it != playerTextures.end())
+        playerSprite.setTexture(it->second);
+
+    playerSprite.setPosition(playerPos);
+
+
     for (auto& fish : fishes) {
         // --- Get actual texture size ---
         std::string texKey = fish.id + (fish.facingRight ? "rightsmall" : "leftsmall");
@@ -245,14 +292,13 @@ void Room::update() {
 
 
 void Room::render(sf::RenderWindow& window) {
-    window.draw(backgroundSprite); // Draw background
+    window.draw(backgroundSprite);
 
     // 1. Draw all room objects except aquarium and storage rack
     for (size_t i = 0; i < objects.size(); ++i) {
-        if (i == Room::STORAGE_RACK || i == Room::AQUARIUM) continue; // we'll draw them dynamically
+        if (i == Room::STORAGE_RACK || i == Room::AQUARIUM) continue;
         window.draw(objects[i].rect);
 
-        // Draw label for other objects (optional)
         sf::Text label(objects[i].name, font, 18);
         label.setFillColor(sf::Color::White);
         label.setPosition(objects[i].rect.getPosition().x, objects[i].rect.getPosition().y - 22);
@@ -277,12 +323,15 @@ void Room::render(sf::RenderWindow& window) {
         decoIdx++;
     }
 
-    // --- Draw aquarium and player in correct order ---
-    const auto& aquariumObj = objects[Room::AQUARIUM];
-    float playerFeetY = playerRect.getPosition().y + playerRect.getSize().y;
-    float aquariumCollisionY = aquariumObj.rect.getPosition().y + aquariumObj.rect.getSize().y - 40.f;
+    // --- Z-ORDER SECTION ---
 
-    // Choose correct aquarium background texture
+    // Use the **sprite's** visual feet for correct Z
+    float playerFeetY = playerSprite.getPosition().y + playerSprite.getTexture()->getSize().y;
+
+    // --- AQUARIUM ---
+    const auto& aquariumObj = objects[Room::AQUARIUM];
+    float aquariumCutoffY = aquariumObj.rect.getPosition().y + aquariumObj.rect.getSize().y; // 507
+
     sf::Sprite aquariumBgSprite;
     bool hasPlant = false, hasCastle = false;
     for (const auto& item : playerData.aquariumContents) {
@@ -297,57 +346,11 @@ void Room::render(sf::RenderWindow& window) {
         aquariumBgSprite.setTexture(aquariumSmCastle);
     else
         aquariumBgSprite.setTexture(aquariumSmTexture);
-
     aquariumBgSprite.setPosition(aquariumObj.rect.getPosition());
 
-    // --- Draw in the correct order ---
-    if (playerFeetY < aquariumCollisionY) {
-        // Player is behind aquarium
-        window.draw(playerRect);
-        window.draw(aquariumBgSprite);
-
-        // Draw fish (room view, behind glass)
-        for (const auto& fish : fishes) {
-            std::string texKey = fish.id + (fish.facingRight ? "rightsmall" : "leftsmall");
-            auto it = fishTextures.find(texKey);
-            if (it != fishTextures.end()) {
-                float fishWidth = it->second.getSize().x;
-                float fishHeight = it->second.getSize().y;
-                sf::Sprite fishSprite;
-                fishSprite.setTexture(it->second);
-                fishSprite.setOrigin(fishWidth / 2.f, fishHeight / 2.f); // <-- Fix: center origin
-                fishSprite.setPosition(fish.position);                   // <-- Fix: position = center
-                window.draw(fishSprite);
-            }
-        }
-        // window.draw(aquariumObj.rect); // Optional: glass overlay
-    }
-    else {
-        window.draw(aquariumBgSprite);
-
-        // Draw fish (room view, behind glass)
-        for (const auto& fish : fishes) {
-            std::string texKey = fish.id + (fish.facingRight ? "rightsmall" : "leftsmall");
-            auto it = fishTextures.find(texKey);
-            if (it != fishTextures.end()) {
-                float fishWidth = it->second.getSize().x;
-                float fishHeight = it->second.getSize().y;
-                sf::Sprite fishSprite;
-                fishSprite.setTexture(it->second);
-                fishSprite.setOrigin(fishWidth / 2.f, fishHeight / 2.f); // <-- Fix: center origin
-                fishSprite.setPosition(fish.position);                   // <-- Fix: position = center
-                window.draw(fishSprite);
-            }
-        }
-        // window.draw(aquariumObj.rect); // Optional: glass overlay
-        window.draw(playerRect);
-    }
-
-
-
-    // --- Draw storage rack (always on top of player and aquarium), with hats in slots ---
+    // --- STORAGE RACK ---
     const auto& rackObj = objects[Room::STORAGE_RACK];
-    window.draw(rackObj.rect);
+    float rackCutoffY = rackObj.rect.getPosition().y + rackObj.rect.getSize().y; // 500
 
     std::vector<sf::Vector2f> rackPositions = {
         {45.f,  420.f},
@@ -356,25 +359,134 @@ void Room::render(sf::RenderWindow& window) {
         {105.f, 480.f}
     };
 
-    // Loop over slots (positions), not just hats!
-    for (size_t i = 0; i < rackPositions.size(); ++i) {
-        if (i >= playerData.unlockedHats.size()) break;
-        const auto& hatId = playerData.unlockedHats[i];
-        // Skip equipped hat (leave empty slot)
-        if (hatId == playerData.equippedHat) continue;
+    // --- DRAW LOGIC ---
+    bool behindAquarium = playerFeetY < aquariumCutoffY;
+    bool behindRack = playerFeetY < rackCutoffY;
 
-        auto it = hatTextures.find(hatId);
-        if (it != hatTextures.end()) {
-            sf::Sprite hatSprite;
-            hatSprite.setTexture(it->second);
-            hatSprite.setPosition(rackPositions[i]);
-            window.draw(hatSprite);
+    // There are 4 possible cases:
+    if (behindAquarium && behindRack) {
+        // Player is behind both
+        window.draw(playerSprite);
+
+        window.draw(aquariumBgSprite);
+        for (const auto& fish : fishes) {
+            std::string texKey = fish.id + (fish.facingRight ? "rightsmall" : "leftsmall");
+            auto it = fishTextures.find(texKey);
+            if (it != fishTextures.end()) {
+                sf::Sprite fishSprite;
+                fishSprite.setTexture(it->second);
+                fishSprite.setOrigin(it->second.getSize().x / 2.f, it->second.getSize().y / 2.f);
+                fishSprite.setPosition(fish.position);
+                window.draw(fishSprite);
+            }
+        }
+
+        window.draw(rackObj.rect);
+        for (size_t i = 0; i < rackPositions.size(); ++i) {
+            if (i >= playerData.unlockedHats.size()) break;
+            const auto& hatId = playerData.unlockedHats[i];
+            if (hatId == playerData.equippedHat) continue;
+            auto it = hatTextures.find(hatId);
+            if (it != hatTextures.end()) {
+                sf::Sprite hatSprite;
+                hatSprite.setTexture(it->second);
+                hatSprite.setPosition(rackPositions[i]);
+                window.draw(hatSprite);
+            }
+        }
+    }
+    else if (!behindAquarium && !behindRack) {
+        // Player is in front of both
+        window.draw(aquariumBgSprite);
+        for (const auto& fish : fishes) {
+            std::string texKey = fish.id + (fish.facingRight ? "rightsmall" : "leftsmall");
+            auto it = fishTextures.find(texKey);
+            if (it != fishTextures.end()) {
+                sf::Sprite fishSprite;
+                fishSprite.setTexture(it->second);
+                fishSprite.setOrigin(it->second.getSize().x / 2.f, it->second.getSize().y / 2.f);
+                fishSprite.setPosition(fish.position);
+                window.draw(fishSprite);
+            }
+        }
+        window.draw(rackObj.rect);
+        for (size_t i = 0; i < rackPositions.size(); ++i) {
+            if (i >= playerData.unlockedHats.size()) break;
+            const auto& hatId = playerData.unlockedHats[i];
+            if (hatId == playerData.equippedHat) continue;
+            auto it = hatTextures.find(hatId);
+            if (it != hatTextures.end()) {
+                sf::Sprite hatSprite;
+                hatSprite.setTexture(it->second);
+                hatSprite.setPosition(rackPositions[i]);
+                window.draw(hatSprite);
+            }
+        }
+        window.draw(playerSprite);
+    }
+    else if (behindAquarium && !behindRack) {
+        // Player is between: behind aquarium, in front of rack
+        window.draw(playerSprite);
+
+        window.draw(aquariumBgSprite);
+        for (const auto& fish : fishes) {
+            std::string texKey = fish.id + (fish.facingRight ? "rightsmall" : "leftsmall");
+            auto it = fishTextures.find(texKey);
+            if (it != fishTextures.end()) {
+                sf::Sprite fishSprite;
+                fishSprite.setTexture(it->second);
+                fishSprite.setOrigin(it->second.getSize().x / 2.f, it->second.getSize().y / 2.f);
+                fishSprite.setPosition(fish.position);
+                window.draw(fishSprite);
+            }
+        }
+        window.draw(rackObj.rect);
+        for (size_t i = 0; i < rackPositions.size(); ++i) {
+            if (i >= playerData.unlockedHats.size()) break;
+            const auto& hatId = playerData.unlockedHats[i];
+            if (hatId == playerData.equippedHat) continue;
+            auto it = hatTextures.find(hatId);
+            if (it != hatTextures.end()) {
+                sf::Sprite hatSprite;
+                hatSprite.setTexture(it->second);
+                hatSprite.setPosition(rackPositions[i]);
+                window.draw(hatSprite);
+            }
+        }
+    }
+    else { // (!behindAquarium && behindRack)
+        // Player is between: in front of aquarium, behind rack
+        window.draw(aquariumBgSprite);
+        for (const auto& fish : fishes) {
+            std::string texKey = fish.id + (fish.facingRight ? "rightsmall" : "leftsmall");
+            auto it = fishTextures.find(texKey);
+            if (it != fishTextures.end()) {
+                sf::Sprite fishSprite;
+                fishSprite.setTexture(it->second);
+                fishSprite.setOrigin(it->second.getSize().x / 2.f, it->second.getSize().y / 2.f);
+                fishSprite.setPosition(fish.position);
+                window.draw(fishSprite);
+            }
+        }
+        window.draw(playerSprite);
+
+        window.draw(rackObj.rect);
+        for (size_t i = 0; i < rackPositions.size(); ++i) {
+            if (i >= playerData.unlockedHats.size()) break;
+            const auto& hatId = playerData.unlockedHats[i];
+            if (hatId == playerData.equippedHat) continue;
+            auto it = hatTextures.find(hatId);
+            if (it != hatTextures.end()) {
+                sf::Sprite hatSprite;
+                hatSprite.setTexture(it->second);
+                hatSprite.setPosition(rackPositions[i]);
+                window.draw(hatSprite);
+            }
         }
     }
 
     // --- Draw interact label and square (unchanged) ---
     if (const RoomObject* obj = getHighlightedObject()) {
-        // Draw label at top center
         sf::Text interactText;
         interactText.setFont(font);
         interactText.setCharacterSize(32);
@@ -385,7 +497,6 @@ void Room::render(sf::RenderWindow& window) {
         interactText.setPosition(window.getSize().x / 2.f, 20.f);
         window.draw(interactText);
 
-        // Draw 30x30px square above the object, centered
         sf::Vector2f objPos = obj->rect.getPosition();
         sf::Vector2f objSize = obj->rect.getSize();
 
@@ -394,12 +505,13 @@ void Room::render(sf::RenderWindow& window) {
             objPos.x + objSize.x / 2.f - 15.f,
             objPos.y - 50.f
         );
-        interactSquare.setFillColor(sf::Color(255, 255, 0, 128)); // Semi-transparent yellow
+        interactSquare.setFillColor(sf::Color(255, 255, 0, 128));
         interactSquare.setOutlineColor(sf::Color::Black);
         interactSquare.setOutlineThickness(2.f);
         window.draw(interactSquare);
     }
 }
+
 
 
 
@@ -431,21 +543,34 @@ void Room::movePlayer(int dx, int dy) {
     float playerWidth = playerRect.getSize().x;
     float playerHeight = playerRect.getSize().y;
     float minX = 0.f, maxX = 800.f;
-    float minFeetY = 350.f, maxFeetY = 585.f;
+    float minFeetY = 390.f, maxFeetY = 600.f;
+
+    // Adjust collision box for feet area
+    const float playerSpriteWidth = playerSprite.getTexture()->getSize().x;
+    const float playerSpriteHeight = playerSprite.getTexture()->getSize().y;
+    const float COLLISION_FEET_TOP = 110.f;
+    const float COLLISION_FEET_LEFT = 35.f;
+    const float COLLISION_FEET_WIDTH = 80.f;
+    const float COLLISION_FEET_HEIGHT = 15.f;
+
 
     // 1. Move X only
     if (dx != 0) {
         float newX = playerPos.x + dx * playerSpeed;
         if (newX < minX) newX = minX;
-        if (newX + playerWidth > maxX) newX = maxX - playerWidth;
+        if (newX + playerSpriteWidth > maxX) newX = maxX - playerSpriteWidth;
 
-        sf::FloatRect feetBox(newX, playerPos.y + playerHeight - 6, playerWidth, 6);
+        sf::FloatRect feetBoxX(
+            newX + COLLISION_FEET_LEFT,
+            playerPos.y + COLLISION_FEET_TOP,
+            COLLISION_FEET_WIDTH,
+            COLLISION_FEET_HEIGHT
+        );
+
 
         bool blockX = false;
-        // Check collisions
         {
             sf::FloatRect computerBounds = objects[Room::COMPUTER].rect.getGlobalBounds();
-            // STORAGE RACK
             sf::FloatRect rackFull = objects[Room::STORAGE_RACK].rect.getGlobalBounds();
             sf::FloatRect rackBottom(
                 rackFull.left,
@@ -453,7 +578,6 @@ void Room::movePlayer(int dx, int dy) {
                 rackFull.width,
                 40
             );
-            // AQUARIUM
             sf::FloatRect aquariumFull = objects[Room::AQUARIUM].rect.getGlobalBounds();
             sf::FloatRect aquariumBottom(
                 aquariumFull.left,
@@ -461,10 +585,11 @@ void Room::movePlayer(int dx, int dy) {
                 aquariumFull.width,
                 40
             );
-            if (computerBounds.intersects(feetBox) ||
-                rackBottom.intersects(feetBox) ||
-                aquariumBottom.intersects(feetBox))
+            if (computerBounds.intersects(feetBoxX) ||
+                rackBottom.intersects(feetBoxX) ||
+                aquariumBottom.intersects(feetBoxX))
                 blockX = true;
+
         }
         if (!blockX) playerPos.x = newX;
     }
@@ -472,16 +597,20 @@ void Room::movePlayer(int dx, int dy) {
     // 2. Move Y only
     if (dy != 0) {
         float newY = playerPos.y + dy * playerSpeed;
-        if (newY + playerHeight < minFeetY) newY = minFeetY - playerHeight;
-        if (newY + playerHeight > maxFeetY) newY = maxFeetY - playerHeight;
+        if (newY + playerSpriteHeight < minFeetY) newY = minFeetY - playerSpriteHeight;
+        if (newY + playerSpriteHeight > maxFeetY) newY = maxFeetY - playerSpriteHeight;
 
-        sf::FloatRect feetBox(playerPos.x, newY + playerHeight - 6, playerWidth, 6);
+        sf::FloatRect feetBoxY(
+            playerPos.x + COLLISION_FEET_LEFT,
+            newY + COLLISION_FEET_TOP,
+            COLLISION_FEET_WIDTH,
+            COLLISION_FEET_HEIGHT
+        );
+
 
         bool blockY = false;
-        // Check collisions
         {
             sf::FloatRect computerBounds = objects[Room::COMPUTER].rect.getGlobalBounds();
-            // STORAGE RACK
             sf::FloatRect rackFull = objects[Room::STORAGE_RACK].rect.getGlobalBounds();
             sf::FloatRect rackBottom(
                 rackFull.left,
@@ -489,7 +618,6 @@ void Room::movePlayer(int dx, int dy) {
                 rackFull.width,
                 40
             );
-            // AQUARIUM
             sf::FloatRect aquariumFull = objects[Room::AQUARIUM].rect.getGlobalBounds();
             sf::FloatRect aquariumBottom(
                 aquariumFull.left,
@@ -497,10 +625,11 @@ void Room::movePlayer(int dx, int dy) {
                 aquariumFull.width,
                 40
             );
-            if (computerBounds.intersects(feetBox) ||
-                rackBottom.intersects(feetBox) ||
-                aquariumBottom.intersects(feetBox))
+            if (computerBounds.intersects(feetBoxY) ||
+                rackBottom.intersects(feetBoxY) ||
+                aquariumBottom.intersects(feetBoxY))
                 blockY = true;
+
         }
         if (!blockY) playerPos.y = newY;
     }
@@ -508,15 +637,6 @@ void Room::movePlayer(int dx, int dy) {
     // Final update
     playerRect.setPosition(playerPos);
 }
-
-
-
-
-
-
-
-
-
 
 
 Room::RoomObject Room::createComputer() {

@@ -65,6 +65,7 @@ public:
 
 
 
+
 private:
     sf::Font& font;
     Player& playerData;
@@ -103,5 +104,13 @@ private:
 
     std::unordered_map<std::string, sf::Texture> aquariumItemTextures;
 
+    // --- Player graphics ---
+    sf::Sprite playerSprite;
+    std::map<std::string, sf::Texture> playerTextures; // Key: "up1", "up2", "down1", etc.
+
+    std::string playerDir = "down"; // "up", "down", "left", "right"
+    int playerFrame = 1;
+    float animTimer = 0.f; // time accumulator for frame switch
+    float animDelay = 6.f; // delay between frame switches, tweak as needed
 
 };
