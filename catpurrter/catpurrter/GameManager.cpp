@@ -67,258 +67,296 @@ void GameManager::processEvents() {
         if (event.type == sf::Event::KeyPressed) {
             switch (state) {
             case GameState::StartMenu:
-                if (showingNewGameConfirm) {
-                    if ((event.key.code == sf::Keyboard::A || event.key.code == sf::Keyboard::Left) && confirmIndex > 0)
-                        confirmIndex--;
-                    else if ((event.key.code == sf::Keyboard::D || event.key.code == sf::Keyboard::Right) && confirmIndex < 1)
-                        confirmIndex++;
-                    else if (event.key.code == sf::Keyboard::Enter) {
-                        if (confirmIndex == 0) {
-                            playerData = Player();
-                            playerData.coins = 10000;
-                            playerData.equippedHat = "none";
-                            playerData.unlockedHats = {};
-                            playerData.saveToFile("save.json");
-                            if (roomView) delete roomView;
-                            roomView = new Room(font, playerData);
-                            roomView->init();
-                            state = GameState::RoomView;
-                        }
-                        showingNewGameConfirm = false;
-                    }
-                    else if (event.key.code == sf::Keyboard::Escape) {
-                        showingNewGameConfirm = false;
-                    }
-                    return;
-                }
-                if (event.key.code == sf::Keyboard::Up || event.key.code == sf::Keyboard::W)
-                    moveUp();
-                if (event.key.code == sf::Keyboard::Down || event.key.code == sf::Keyboard::S)
-                    moveDown();
-                if (event.key.code == sf::Keyboard::Enter)
-                    selectOption();
+                processStartMenuEvents(event);
                 break;
-
             case GameState::RoomView:
-                if (roomView) {
-                    roomView->handleInput(event.key.code);
-                    roomView->update();
-                    if ((event.key.code == sf::Keyboard::Enter || event.key.code == sf::Keyboard::Space) && roomView->isNearObject()) {
-                        std::string obj = roomView->getNearbyObject();
-                        if (obj == "Computer") {
-                            state = GameState::ComputerView;
-                            if (computerView) delete computerView;
-                            computerView = new Computer(font, playerData);
-                            computerView->init();
-                        }
-                        else if (obj == "Aquarium") {
-                            state = GameState::AquariumView;
-                            if (aquariumView) delete aquariumView;
-                            aquariumView = new Aquarium(font, playerData);
-                            aquariumView->init();
-                        }
-                        else if (obj == "Shelves") {
-                            state = GameState::ShelfView;
-                            if (shelfView) delete shelfView;
-                            shelfView = new Shelf(font, playerData);
-                            shelfView->init();
-                        }
-                        else if (obj == "Storage Rack") {
-                            state = GameState::StorageView;
-                            if (storageRackView) delete storageRackView;
-                            storageRackView = new StorageRack(font, playerData, this);
-                            storageRackView->init();
-                        }
-                        else if (obj == "Doors") {
-                            state = GameState::StartMenu;
-                            selectedIndex = 0;
-                            menuItems.clear();
-                            initMenu();
-                        }
-                    }
-                }
+                processRoomViewEvents(event);
                 break;
-
             case GameState::ComputerView:
-                computerView->handleInput(event.key.code);
-                if (computerView->shouldClose()) {
-                    delete computerView;
-                    computerView = nullptr;
-                    state = GameState::RoomView;
-                    break;
-                }
-                if (event.key.code == sf::Keyboard::Enter) {
-                    ComputerSelection choice = computerView->getSelectedOption();
-                    if (choice == ComputerSelection::Shop) {
-                        state = GameState::ShopCategoryView;
-                        if (shopCategoryView) delete shopCategoryView;
-                        shopCategoryView = new ShopCategoryView(font);
-                        shopCategoryView->init();
-                    }
-                    else if (choice == ComputerSelection::Back) {
-                        delete computerView;
-                        computerView = nullptr;
-                        state = GameState::RoomView;
-                    }
-                    const std::string& selectedGame = computerView->getSelectedMiniGame();
-                    if (!selectedGame.empty()) {
-                        if (selectedGame == "snake") {
-                            if (snakeGame) delete snakeGame;
-                            snakeGame = new SnakeGame(font, playerData, *this);
-                            snakeGame->init();
-                            state = GameState::MiniGame;
-                        }
-                        else if (selectedGame == "catch") {
-                            if (catchGame) delete catchGame;
-                            catchGame = new CatchGame(font, playerData, *this);
-                            catchGame->init();
-                            state = GameState::MiniGame;
-                        }
-                        else if (selectedGame == "dodge") {
-                            if (dodgeGame) delete dodgeGame;
-                            dodgeGame = new DodgeGame(font, playerData, *this);
-                            dodgeGame->init();
-                            state = GameState::MiniGame;
-                        }
-                        computerView->clearSelectedMiniGame();
-                        return;
-                    }
-                }
+                processComputerViewEvents(event);
                 break;
-
             case GameState::StorageView:
-                if (storageRackView)
-                    storageRackView->handleInput(event.key.code);
-                if (storageRackView && storageRackView->shouldClose()) {
-                    storageRackView->resetCloseFlag();
-                    delete storageRackView;
-                    storageRackView = nullptr;
-                    state = GameState::RoomView;
-                }
+                processStorageViewEvents(event);
                 break;
-
             case GameState::HatShop:
-                if (hatShopView)
-                    hatShopView->handleInput(event.key.code);
-                if (hatShopView && hatShopView->shouldClose()) {
-                    hatShopView->resetCloseFlag();
-                    delete hatShopView;
-                    hatShopView = nullptr;
-                    state = GameState::ShopCategoryView;
-                }
+                processHatShopEvents(event);
                 break;
-
             case GameState::MiniGame:
-                if (snakeGame)
-                    snakeGame->handleInput(event.key.code);
-                else if (catchGame)
-                    catchGame->handleInput(event.key.code);
-                else if (dodgeGame)
-                    dodgeGame->handleInput(event.key.code);
+                processMiniGameEvents(event);
                 break;
-
             case GameState::ShelfView:
-                if (shelfView)
-                    shelfView->handleInput(event.key.code);
-                if (shelfView && shelfView->shouldClose()) {
-                    shelfView->resetCloseFlag();
-                    state = GameState::RoomView;
-                }
+                processShelfViewEvents(event);
                 break;
-
             case GameState::ShopCategoryView:
-                if (shopCategoryView)
-                    shopCategoryView->handleInput(event.key.code);
-                if (shopCategoryView && shopCategoryView->shouldClose()) {
-                    shopCategoryView->resetCloseFlag();
-                    state = GameState::ComputerView;
-                }
-                else if (shopCategoryView) {
-                    ShopSelection selected = shopCategoryView->getSelectedOption();
-                    if (selected != ShopSelection::None) {
-                        switch (selected) {
-                        case ShopSelection::HatShop:
-                            if (hatShopView) delete hatShopView;
-                            hatShopView = new HatShopView(font, playerData, *this);
-                            hatShopView->init();
-                            state = GameState::HatShop;
-                            break;
-                        case ShopSelection::FishTankShop:
-                            if (fishTankShopView) delete fishTankShopView;
-                            fishTankShopView = new FishTankShopView(font, playerData, *this);
-                            fishTankShopView->init();
-                            state = GameState::FishTankShop;
-                            break;
-                        case ShopSelection::ShelfShop:
-                            if (shelfShopView) delete shelfShopView;
-                            shelfShopView = new ShelfShopView(font, playerData, *this);
-                            shelfShopView->init();
-                            state = GameState::ShelfShop;
-                            break;
-                        case ShopSelection::MiniGameShop:
-                            if (miniGameShopView) delete miniGameShopView;
-                            miniGameShopView = new MiniGameShopView(font, playerData, *this);
-                            miniGameShopView->init();
-                            state = GameState::MiniGameShop;
-                            break;
-                        default:
-                            break;
-                        }
-                        shopCategoryView->clearSelection();
-                    }
-                }
+                processShopCategoryViewEvents(event);
                 break;
-
             case GameState::ShelfShop:
-                if (shelfShopView)
-                    shelfShopView->handleInput(event.key.code);
-                if (shelfShopView && shelfShopView->shouldClose()) {
-                    shelfShopView->resetCloseFlag();
-                    state = GameState::ShopCategoryView;
-                }
+                processShelfShopEvents(event);
                 break;
-
             case GameState::AquariumView:
-                if (aquariumView)
-                    aquariumView->handleInput(event.key.code);
-                if (aquariumView && aquariumView->shouldClose()) {
-                    aquariumView->resetCloseFlag();
-                    state = GameState::RoomView;
-                }
+                processAquariumViewEvents(event);
                 break;
-
             case GameState::FishTankShop:
-                if (fishTankShopView)
-                    fishTankShopView->handleInput(event.key.code);
-                if (fishTankShopView && fishTankShopView->shouldClose()) {
-                    fishTankShopView->resetCloseFlag();
-                    delete fishTankShopView;
-                    fishTankShopView = nullptr;
-                    state = GameState::ShopCategoryView;
-                }
+                processFishTankShopEvents(event);
                 break;
-
             case GameState::MiniGameShop:
-                if (miniGameShopView)
-                    miniGameShopView->handleInput(event.key.code);
-                if (miniGameShopView && miniGameShopView->shouldClose()) {
-                    miniGameShopView->resetCloseFlag();
-                    delete miniGameShopView;
-                    miniGameShopView = nullptr;
-                    if (computerView) delete computerView;
-                    computerView = new Computer(font, playerData);
-                    computerView->init();
-                    if (shopCategoryView) delete shopCategoryView;
-                    shopCategoryView = new ShopCategoryView(font);
-                    shopCategoryView->init();
-                    shopCategoryView->setSelectionIndex(3);
-                    state = GameState::ShopCategoryView;
-                }
+                processMiniGameShopEvents(event);
                 break;
             }
         }
     }
 }
+
+void GameManager::processStartMenuEvents(const sf::Event& event) {
+    if (showingNewGameConfirm) {
+        if ((event.key.code == sf::Keyboard::A || event.key.code == sf::Keyboard::Left) && confirmIndex > 0)
+            confirmIndex--;
+        else if ((event.key.code == sf::Keyboard::D || event.key.code == sf::Keyboard::Right) && confirmIndex < 1)
+            confirmIndex++;
+        else if (event.key.code == sf::Keyboard::Enter) {
+            if (confirmIndex == 0) {
+                playerData = Player();
+                playerData.coins = 10000;
+                playerData.equippedHat = "none";
+                playerData.unlockedHats = {};
+                playerData.saveToFile("save.json");
+                if (roomView) delete roomView;
+                roomView = new Room(font, playerData);
+                roomView->init();
+                state = GameState::RoomView;
+            }
+            showingNewGameConfirm = false;
+        }
+        else if (event.key.code == sf::Keyboard::Escape) {
+            showingNewGameConfirm = false;
+        }
+        return;
+    }
+    if (event.key.code == sf::Keyboard::Up || event.key.code == sf::Keyboard::W)
+        moveUp();
+    if (event.key.code == sf::Keyboard::Down || event.key.code == sf::Keyboard::S)
+        moveDown();
+    if (event.key.code == sf::Keyboard::Enter)
+        selectOption();
+}
+
+void GameManager::processRoomViewEvents(const sf::Event& event) {
+    if (roomView) {
+        roomView->handleInput(event.key.code);
+        roomView->update();
+        if ((event.key.code == sf::Keyboard::Enter || event.key.code == sf::Keyboard::Space) && roomView->isNearObject()) {
+            std::string obj = roomView->getNearbyObject();
+            if (obj == "Computer") {
+                state = GameState::ComputerView;
+                if (computerView) delete computerView;
+                computerView = new Computer(font, playerData);
+                computerView->init();
+            }
+            else if (obj == "Aquarium") {
+                state = GameState::AquariumView;
+                if (aquariumView) delete aquariumView;
+                aquariumView = new Aquarium(font, playerData);
+                aquariumView->init();
+            }
+            else if (obj == "Shelves") {
+                state = GameState::ShelfView;
+                if (shelfView) delete shelfView;
+                shelfView = new Shelf(font, playerData);
+                shelfView->init();
+            }
+            else if (obj == "Storage Rack") {
+                state = GameState::StorageView;
+                if (storageRackView) delete storageRackView;
+                storageRackView = new StorageRack(font, playerData, this);
+                storageRackView->init();
+            }
+            else if (obj == "Doors") {
+                state = GameState::StartMenu;
+                selectedIndex = 0;
+                menuItems.clear();
+                initMenu();
+            }
+        }
+    }
+}
+
+void GameManager::processComputerViewEvents(const sf::Event& event) {
+    computerView->handleInput(event.key.code);
+    if (computerView->shouldClose()) {
+        delete computerView;
+        computerView = nullptr;
+        state = GameState::RoomView;
+        return;
+    }
+    if (event.key.code == sf::Keyboard::Enter) {
+        ComputerSelection choice = computerView->getSelectedOption();
+        if (choice == ComputerSelection::Shop) {
+            state = GameState::ShopCategoryView;
+            if (shopCategoryView) delete shopCategoryView;
+            shopCategoryView = new ShopCategoryView(font);
+            shopCategoryView->init();
+        }
+        else if (choice == ComputerSelection::Back) {
+            delete computerView;
+            computerView = nullptr;
+            state = GameState::RoomView;
+        }
+        const std::string& selectedGame = computerView->getSelectedMiniGame();
+        if (!selectedGame.empty()) {
+            if (selectedGame == "snake") {
+                if (snakeGame) delete snakeGame;
+                snakeGame = new SnakeGame(font, playerData, *this);
+                snakeGame->init();
+                state = GameState::MiniGame;
+            }
+            else if (selectedGame == "catch") {
+                if (catchGame) delete catchGame;
+                catchGame = new CatchGame(font, playerData, *this);
+                catchGame->init();
+                state = GameState::MiniGame;
+            }
+            else if (selectedGame == "dodge") {
+                if (dodgeGame) delete dodgeGame;
+                dodgeGame = new DodgeGame(font, playerData, *this);
+                dodgeGame->init();
+                state = GameState::MiniGame;
+            }
+            computerView->clearSelectedMiniGame();
+            return;
+        }
+    }
+}
+
+void GameManager::processStorageViewEvents(const sf::Event& event) {
+    if (storageRackView)
+        storageRackView->handleInput(event.key.code);
+    if (storageRackView && storageRackView->shouldClose()) {
+        storageRackView->resetCloseFlag();
+        delete storageRackView;
+        storageRackView = nullptr;
+        state = GameState::RoomView;
+    }
+}
+
+void GameManager::processHatShopEvents(const sf::Event& event) {
+    if (hatShopView)
+        hatShopView->handleInput(event.key.code);
+    if (hatShopView && hatShopView->shouldClose()) {
+        hatShopView->resetCloseFlag();
+        delete hatShopView;
+        hatShopView = nullptr;
+        state = GameState::ShopCategoryView;
+    }
+}
+
+void GameManager::processMiniGameEvents(const sf::Event& event) {
+    if (snakeGame)
+        snakeGame->handleInput(event.key.code);
+    else if (catchGame)
+        catchGame->handleInput(event.key.code);
+    else if (dodgeGame)
+        dodgeGame->handleInput(event.key.code);
+}
+
+void GameManager::processShelfViewEvents(const sf::Event& event) {
+    if (shelfView)
+        shelfView->handleInput(event.key.code);
+    if (shelfView && shelfView->shouldClose()) {
+        shelfView->resetCloseFlag();
+        state = GameState::RoomView;
+    }
+}
+
+void GameManager::processShopCategoryViewEvents(const sf::Event& event) {
+    if (shopCategoryView)
+        shopCategoryView->handleInput(event.key.code);
+    if (shopCategoryView && shopCategoryView->shouldClose()) {
+        shopCategoryView->resetCloseFlag();
+        state = GameState::ComputerView;
+    }
+    else if (shopCategoryView) {
+        ShopSelection selected = shopCategoryView->getSelectedOption();
+        if (selected != ShopSelection::None) {
+            switch (selected) {
+            case ShopSelection::HatShop:
+                if (hatShopView) delete hatShopView;
+                hatShopView = new HatShopView(font, playerData, *this);
+                hatShopView->init();
+                state = GameState::HatShop;
+                break;
+            case ShopSelection::FishTankShop:
+                if (fishTankShopView) delete fishTankShopView;
+                fishTankShopView = new FishTankShopView(font, playerData, *this);
+                fishTankShopView->init();
+                state = GameState::FishTankShop;
+                break;
+            case ShopSelection::ShelfShop:
+                if (shelfShopView) delete shelfShopView;
+                shelfShopView = new ShelfShopView(font, playerData, *this);
+                shelfShopView->init();
+                state = GameState::ShelfShop;
+                break;
+            case ShopSelection::MiniGameShop:
+                if (miniGameShopView) delete miniGameShopView;
+                miniGameShopView = new MiniGameShopView(font, playerData, *this);
+                miniGameShopView->init();
+                state = GameState::MiniGameShop;
+                break;
+            default:
+                break;
+            }
+            shopCategoryView->clearSelection();
+        }
+    }
+}
+
+void GameManager::processShelfShopEvents(const sf::Event& event) {
+    if (shelfShopView)
+        shelfShopView->handleInput(event.key.code);
+    if (shelfShopView && shelfShopView->shouldClose()) {
+        shelfShopView->resetCloseFlag();
+        state = GameState::ShopCategoryView;
+    }
+}
+
+void GameManager::processAquariumViewEvents(const sf::Event& event) {
+    if (aquariumView)
+        aquariumView->handleInput(event.key.code);
+    if (aquariumView && aquariumView->shouldClose()) {
+        aquariumView->resetCloseFlag();
+        state = GameState::RoomView;
+    }
+}
+
+void GameManager::processFishTankShopEvents(const sf::Event& event) {
+    if (fishTankShopView)
+        fishTankShopView->handleInput(event.key.code);
+    if (fishTankShopView && fishTankShopView->shouldClose()) {
+        fishTankShopView->resetCloseFlag();
+        delete fishTankShopView;
+        fishTankShopView = nullptr;
+        state = GameState::ShopCategoryView;
+    }
+}
+
+void GameManager::processMiniGameShopEvents(const sf::Event& event) {
+    if (miniGameShopView)
+        miniGameShopView->handleInput(event.key.code);
+    if (miniGameShopView && miniGameShopView->shouldClose()) {
+        miniGameShopView->resetCloseFlag();
+        delete miniGameShopView;
+        miniGameShopView = nullptr;
+        if (computerView) delete computerView;
+        computerView = new Computer(font, playerData);
+        computerView->init();
+        if (shopCategoryView) delete shopCategoryView;
+        shopCategoryView = new ShopCategoryView(font);
+        shopCategoryView->init();
+        shopCategoryView->setSelectionIndex(3);
+        state = GameState::ShopCategoryView;
+    }
+}
+
 
 
 void GameManager::update(float dt) {

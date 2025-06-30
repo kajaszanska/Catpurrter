@@ -140,4 +140,18 @@ private:
     // ==== Shop Navigation (templated) ====
     template<typename T>
     void handleShopNavigationInput(sf::Keyboard::Key key, int& selectionIndex, const std::vector<T>& items);
+
+    void processStartMenuEvents(const sf::Event& event);
+    void processRoomViewEvents(const sf::Event& event);
+    void processComputerViewEvents(const sf::Event& event);
+    void processStorageViewEvents(const sf::Event& event);
+    void processHatShopEvents(const sf::Event& event);
+    void processMiniGameEvents(const sf::Event& event);
+    void processShelfViewEvents(const sf::Event& event);
+    void processShopCategoryViewEvents(const sf::Event& event);
+    void processShelfShopEvents(const sf::Event& event);
+    void processAquariumViewEvents(const sf::Event& event);
+    void processFishTankShopEvents(const sf::Event& event);
+    void processMiniGameShopEvents(const sf::Event& event);
+
 };
