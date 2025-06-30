@@ -1,6 +1,9 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "Player.h"
+#include <unordered_map>
+#include <vector>
+#include <string>
 
 class Aquarium {
 public:
@@ -19,26 +22,21 @@ private:
     Player& playerData;
     bool closeRequested;
 
-    sf::Texture aquariumBigTexture;        // aquariumbig.png
-    sf::Texture aquariumBigPlants;         // aquariumbigplants.png
-    sf::Texture aquariumBigCastle;         // aquariumbigcastle.png
-    sf::Texture aquariumBigAll;            // aquariumbigall.png
+    sf::Texture aquariumBigTexture;
+    sf::Texture aquariumBigPlants;
+    sf::Texture aquariumBigCastle;
+    sf::Texture aquariumBigAll;
 
     struct FishVisual {
-        std::string id;         // e.g. "fish1"
-        bool facingRight = true; // direction: true = right, false = left
-        sf::Vector2f position;   // position of the fish
-        sf::Vector2f velocity;   // speed (pixels/frame) in x/y
-        float directionTimer = 0; // timer to change direction
+        std::string id;
+        bool facingRight = true;
+        sf::Vector2f position;
+        sf::Vector2f velocity;
+        float directionTimer = 0;
         float distanceSinceDirectionChange = 0.0f;
         float minSwimDistance = 60.f;
-
     };
 
-
-
     std::vector<FishVisual> fishes;
-  
     std::unordered_map<std::string, sf::Texture> fishTextures;
-
 };

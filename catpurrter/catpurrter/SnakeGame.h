@@ -38,7 +38,6 @@ private:
     void resetGame();
     void spawnFood();
     void moveSnake();
-    bool checkCollision();
     void drawMenu(sf::RenderWindow& window);
     void drawGame(sf::RenderWindow& window);
     void drawPause(sf::RenderWindow& window);
@@ -47,11 +46,10 @@ private:
     Player& player;
     GameManager& gameManager;
 
-    // Game parameters
     const sf::Font& font;
     SnakeGameState state = SnakeGameState::MainMenu;
 
-    sf::Vector2i direction = { 1, 0 }; // Start moving right
+    sf::Vector2i direction = { 1, 0 }; 
     sf::Vector2i nextDirection = { 1, 0 };
     std::deque<sf::Vector2i> snake;
     sf::Vector2i food;
@@ -60,7 +58,7 @@ private:
     int gridHeight = 16;
     int tileSize = 24;
     float moveTimer = 0;
-    float moveDelay = 0.12f; // Move every 0.12s
+    float moveDelay = 0.12f; 
 
     bool closeRequested = false;
     bool gameOver = false;

@@ -26,12 +26,9 @@ public:
     void update();
     void render(sf::RenderWindow& window);
 
-    // For highlighting/interactions:
     bool isNearObject() const;
     std::string getNearbyObject() const;
     const RoomObject* getHighlightedObject() const;
-
-
 
     enum RoomObjectIndex {
         COMPUTER = 0,
@@ -55,24 +52,15 @@ public:
         float minSwimDistance = 0.f;
         float distanceSinceDirectionChange = 0.f;
         float verticalSwimTimer = 0.f; 
-    };
-
-   
-
+    };     
 
     std::vector<FishVisual> fishes;
-
-
     std::unordered_map<std::string, sf::Texture> fishTextures;
-
-
-
 
 private:
     sf::Font& font;
     Player& playerData;
 
-    // Player (avatar)
     sf::RectangleShape playerRect;
     sf::Vector2f playerPos;
     float playerSpeed = 0.20f;
@@ -87,7 +75,6 @@ private:
     sf::Texture backgroundTexture;
     sf::Sprite backgroundSprite;
 
-    // Object creators
     RoomObject createComputer();
     RoomObject createAquarium();
     RoomObject createStorageRack();
@@ -108,13 +95,11 @@ private:
 
     std::unordered_map<std::string, sf::Texture> aquariumItemTextures;
 
-    // --- Player graphics ---
     sf::Sprite playerSprite;
-    std::map<std::string, std::shared_ptr<sf::Texture>> playerTextures; // Key: "up1", "up2", "down1", etc.
+    std::map<std::string, std::shared_ptr<sf::Texture>> playerTextures; 
 
-    std::string playerDir = "down"; // "up", "down", "left", "right"
+    std::string playerDir = "down"; 
     int playerFrame = 1;
-    float animTimer = 0.f; // time accumulator for frame switch
-    float animDelay = 6.f; // delay between frame switches, tweak as needed
-
+    float animTimer = 0.f; 
+    float animDelay = 6.f; // delay between frame switches
 };

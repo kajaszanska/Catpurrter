@@ -44,8 +44,7 @@ void CatchGame::spawnDrop() {
     drop.shape.setOrigin(15, 15);
     drop.shape.setPosition(xpos(rng), 80);
     int t = type(rng);
-
-    // 0,1 = good (green, cyan), 2,3 = bad (red, black)
+       
     if (t == 0) { drop.shape.setFillColor(sf::Color(70, 255, 120)); drop.good = true; }
     else if (t == 1) { drop.shape.setFillColor(sf::Color(90, 210, 255)); drop.good = true; }
     else if (t == 2) { drop.shape.setFillColor(sf::Color(220, 60, 60)); drop.good = false; }
@@ -58,7 +57,6 @@ void CatchGame::update(float dt) {
 
     const float moveSpeed = 1000.f;
 
-    // Movement
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
         playerRect.move(-moveSpeed * dt, 0);
         if (playerRect.getPosition().x < 120) playerRect.setPosition(120, playerRect.getPosition().y);
@@ -106,21 +104,16 @@ void CatchGame::update(float dt) {
         }
     }
 
-    // This line updates spawnDelay based on the current score
     float baseDelay = 1.3f;
     float minDelay = 0.25f;
     spawnDelay = std::max(baseDelay - score * 0.021f, minDelay);
 
-    // Clamp fallSpeed (optional)
     if (fallSpeed > 400.f) fallSpeed = 400.f;
 
     if (lives < 0) {
         state = CatchGameState::GameOver;
     }
 }
-
-
-
 
 void CatchGame::handleInput(sf::Keyboard::Key key) {
     if (state == CatchGameState::MainMenu) {
@@ -175,7 +168,6 @@ void CatchGame::render(sf::RenderWindow& window) {
     else if (state == CatchGameState::GameOver) drawGameOver(window);
 }
 
-// Implement drawMenu, drawGame, drawPause, drawInstructions, drawGameOver to match Snake!
 
 void CatchGame::drawMenu(sf::RenderWindow& window) {
     float menuWidth = 700.f;
@@ -188,12 +180,10 @@ void CatchGame::drawMenu(sf::RenderWindow& window) {
     bg.setPosition(60, 60);
     window.draw(bg);
 
-    // Title
     sf::Text title("Catch Game", font, 48);
     sf::FloatRect titleBounds = title.getLocalBounds();
     title.setOrigin(titleBounds.left + titleBounds.width / 2.0f, titleBounds.top + titleBounds.height / 2.0f);
 
-    // Menu options
     std::string options[] = { "Play", "Instructions", "Exit" };
     int numOptions = 3;
     float optionSpacing = 14.f;
@@ -212,12 +202,10 @@ void CatchGame::drawMenu(sf::RenderWindow& window) {
 
     float startY = centerY - totalMenuHeight / 2.0f;
 
-    // Draw title
     title.setPosition(centerX, startY + titleBounds.height / 2.0f);
     title.setFillColor(sf::Color::Cyan);
     window.draw(title);
 
-    // Draw options
     float currY = startY + titleBounds.height + titleToOption;
     for (int i = 0; i < numOptions; ++i) {
         sf::Text t(options[i], font, (unsigned)optionFontSize);
@@ -231,10 +219,10 @@ void CatchGame::drawMenu(sf::RenderWindow& window) {
 }
 
 void CatchGame::drawGame(sf::RenderWindow& window) {
-    // Purple background
+
     window.clear(sf::Color(80, 0, 120));
 
-    // Play area (inner rectangle)
+    // Play area 
     sf::RectangleShape bg(sf::Vector2f(560.f, 420.f));
     bg.setFillColor(sf::Color(30, 0, 80));
     bg.setPosition(120, 80);
@@ -243,21 +231,19 @@ void CatchGame::drawGame(sf::RenderWindow& window) {
     // Drops
     for (const auto& drop : drops) {
         sf::RectangleShape d = drop.shape;
-        d.move(0, 0); // Already positioned
+        d.move(0, 0); 
         window.draw(d);
     }
     // Player
     sf::RectangleShape playerBox = playerRect;
-    playerBox.move(0, 0); // Already positioned
+    playerBox.move(0, 0); 
     window.draw(playerBox);
 
-    // Score display (yellow)
     sf::Text scoreText("Score: " + std::to_string(score), font, 32);
     scoreText.setFillColor(sf::Color(255, 220, 60));
     scoreText.setPosition(120, 40);
     window.draw(scoreText);
 
-    // Lives display (cyan)
     sf::Text livesText("Lives: " + std::to_string(lives), font, 32);
     livesText.setFillColor(sf::Color::Cyan);
     livesText.setPosition(400, 40);
@@ -276,7 +262,6 @@ void CatchGame::drawPause(sf::RenderWindow& window) {
     rect.setPosition(rectPos);
     window.draw(rect);
 
-    // "Paused"
     sf::Text pauseText("Paused", font, 32);
     sf::FloatRect pauseBounds = pauseText.getLocalBounds();
     pauseText.setOrigin(pauseBounds.left + pauseBounds.width / 2.0f, pauseBounds.top + pauseBounds.height / 2.0f);
@@ -284,7 +269,6 @@ void CatchGame::drawPause(sf::RenderWindow& window) {
     pauseText.setFillColor(sf::Color::White);
     window.draw(pauseText);
 
-    // Options: Resume / Exit
     std::string opts[] = { "Resume", "Exit" };
     for (int i = 0; i < 2; ++i) {
         sf::Text t(opts[i], font, 28);
@@ -350,7 +334,6 @@ void CatchGame::drawGameOver(sf::RenderWindow& window) {
     over.setFillColor(sf::Color(255, 80, 80));
     window.draw(over);
 
-    // Options
     std::string opts[] = { "Restart", "Back to Menu" };
     sf::Text left(opts[0], font, 28);
     sf::Text right(opts[1], font, 28);

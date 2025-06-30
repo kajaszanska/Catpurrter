@@ -6,22 +6,19 @@ Shelf::Shelf(const sf::Font& font, Player& player)
 }
 
 void Shelf::init() {
-    // Load shelf closeup background
     if (!shelfBackgroundTexture.loadFromFile("assets/graphics/shelves/shelvesclose.png")) {
         std::cout << "Failed to load shelvesclose.png!\n";
     }
     shelfBackgroundSprite.setTexture(shelfBackgroundTexture);
 
-    // Prepare big decoration sprites
     bigDecorationTextures.clear();
     bigDecorationSprites.clear();
 
-    // Example shelf positions (adjust as needed)
  std::vector<sf::Vector2f> shelfPositions = {
-    {170.f, 25.f},   // Position for first item (left, top shelf)
-    {400.f, 25.f},   // Position for second item (right, top shelf)
-    {170.f, 255.f},  // Position for third item (left, bottom shelf)
-    {400.f, 255.f}   // Position for fourth item (right, bottom shelf)
+    {170.f, 25.f},   // left, top shelf
+    {400.f, 25.f},   // right, top shelf
+    {170.f, 255.f},  // left, bottom shelf
+    {400.f, 255.f}   // right, bottom shelf
 };
 
  size_t idx = 0;
@@ -41,8 +38,6 @@ void Shelf::init() {
      }
      ++idx;
  }
-
-
     selectionIndex = 0;
 }
 
@@ -54,15 +49,12 @@ void Shelf::update() {
 }
 
 void Shelf::render(sf::RenderWindow& window) {
-    // Draw the closeup shelf background
     window.draw(shelfBackgroundSprite);
 
-    // Draw big decoration sprites on the shelf
     for (const auto& spr : bigDecorationSprites) {
         window.draw(spr);
     }
 
-    // Optionally: Draw title and navigation (optional)
     sf::Text title;
     title.setFont(font);
     title.setString("Your Shelf Decorations");
@@ -71,8 +63,6 @@ void Shelf::render(sf::RenderWindow& window) {
     title.setPosition(40.f, 20.f);
     window.draw(title);
 
-    // Optionally: Highlight current selection (if you want navigation)
-    // You can draw a yellow box or change sprite tint for the selected decoration if desired.
 }
 
 

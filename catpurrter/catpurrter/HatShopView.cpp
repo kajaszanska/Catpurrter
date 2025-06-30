@@ -12,8 +12,6 @@ HatShopView::HatShopView(sf::Font& font, Player& player, GameManager& gm)
     {"frog", "Froggy Hat", 30},
     {"wizard", "Wizard Hat", 35}
     };
-
-
 }
 
 void HatShopView::init() {
@@ -94,9 +92,8 @@ void HatShopView::updateOptionColors() {
 
 
 void HatShopView::render(sf::RenderWindow& window) {
-    // Fill background with purple
     sf::RectangleShape bg(sf::Vector2f(static_cast<float>(window.getSize().x), static_cast<float>(window.getSize().y)));
-    bg.setFillColor(sf::Color(120, 60, 200)); // Pick your favorite purple
+    bg.setFillColor(sf::Color(120, 60, 200)); 
     window.draw(bg);
 
     gameManager.drawSectionTitle(window, font, "Hat Shop");
@@ -105,7 +102,6 @@ void HatShopView::render(sf::RenderWindow& window) {
     for (const auto& opt : hatOptions)
         window.draw(opt);
 }
-
 
 
 bool HatShopView::shouldClose() const {

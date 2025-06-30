@@ -16,13 +16,15 @@ enum class CatchGameState {
 class CatchGame {
 public:
     CatchGame(const sf::Font& font, Player& player, GameManager& gm);
+
     void init();
     void update(float dt);
     void render(sf::RenderWindow& window);
     void handleInput(sf::Keyboard::Key key);
     bool shouldClose() const { return closeRequested; }
+
 private:
-    // Core
+    // Core references
     const sf::Font& font;
     Player& player;
     GameManager& gameManager;
@@ -42,6 +44,7 @@ private:
     float spawnTimer = 0.f;
     float spawnDelay = 1.0f;
     float fallSpeed = 180.f;
+
     struct Drop {
         sf::RectangleShape shape;
         bool good;
@@ -51,7 +54,7 @@ private:
     // Player
     sf::RectangleShape playerRect;
 
-    // Utility
+    // Utility methods
     void resetGame();
     void spawnDrop();
     void drawMenu(sf::RenderWindow& window);

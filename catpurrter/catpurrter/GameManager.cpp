@@ -9,36 +9,15 @@
 #include "CatchGame.h"
 #include "DodgeGame.h"
 
-
-
-
 #include <iostream>
-
-
-
 
 GameManager::GameManager()
     : window(sf::VideoMode(800, 600), "Catpurrter - Start Menu"), selectedIndex(0), state(GameState::StartMenu)
 {
-    window.setKeyRepeatEnabled(false); 
+    window.setKeyRepeatEnabled(false);
     loadFont();
     initMenu();
-  }
-
-
-
-void GameManager::run() {
-    while (window.isOpen()) {
-        float dt = frameClock.restart().asSeconds();  
-
-        processEvents();
-        handleContinuousMovement();
-        update(dt);    
-        render();
-    }
 }
-
-
 
 void GameManager::loadFont() {
     if (!font.loadFromFile("assets/fonts/Roboto-VariableFont_wdth,wght.ttf")) {
@@ -53,16 +32,24 @@ void GameManager::initMenu() {
     startMenuBgSprite.setTexture(startMenuBgTexture);
 
     std::vector<std::string> options = { "New Game", "Load Game", "Exit" };
-
     for (size_t i = 0; i < options.size(); ++i) {
         sf::Text text;
         text.setFont(font);
         text.setString(options[i]);
         text.setCharacterSize(40);
         text.setPosition(300.f, 200.f + i * 60.f);
-     
         text.setFillColor(i == selectedIndex ? sf::Color(200, 170, 40) : sf::Color(120, 60, 255));
         menuItems.push_back(text);
+    }
+}
+
+void GameManager::run() {
+    while (window.isOpen()) {
+        float dt = frameClock.restart().asSeconds();
+        processEvents();
+        handleContinuousMovement();
+        update(dt);
+        render();
     }
 }
 
@@ -71,7 +58,6 @@ void GameManager::processEvents() {
     while (window.pollEvent(event)) {
         if (event.type == sf::Event::Closed)
             window.close();
-
 
         if (event.type == sf::Event::KeyPressed)
             keyState[event.key.code] = true;
@@ -82,37 +68,29 @@ void GameManager::processEvents() {
             switch (state) {
             case GameState::StartMenu:
                 if (showingNewGameConfirm) {
-                    // Confirmation popup input
                     if ((event.key.code == sf::Keyboard::A || event.key.code == sf::Keyboard::Left) && confirmIndex > 0)
                         confirmIndex--;
                     else if ((event.key.code == sf::Keyboard::D || event.key.code == sf::Keyboard::Right) && confirmIndex < 1)
                         confirmIndex++;
                     else if (event.key.code == sf::Keyboard::Enter) {
                         if (confirmIndex == 0) {
-                            // YES selected: perform new game logic here!
-                            std::cout << "Starting new game - confirmed!\n";
                             playerData = Player();
                             playerData.coins = 10000;
                             playerData.equippedHat = "none";
-                            playerData.unlockedHats = {}; // default hats
+                            playerData.unlockedHats = {};
                             playerData.saveToFile("save.json");
-
                             if (roomView) delete roomView;
                             roomView = new Room(font, playerData);
                             roomView->init();
-
                             state = GameState::RoomView;
                         }
-                        // In both cases, hide popup
                         showingNewGameConfirm = false;
                     }
                     else if (event.key.code == sf::Keyboard::Escape) {
                         showingNewGameConfirm = false;
                     }
-                    return; // eat keypresses if popup is open
+                    return;
                 }
-
-                // If popup not showing, handle normal menu input
                 if (event.key.code == sf::Keyboard::Up || event.key.code == sf::Keyboard::W)
                     moveUp();
                 if (event.key.code == sf::Keyboard::Down || event.key.code == sf::Keyboard::S)
@@ -121,132 +99,107 @@ void GameManager::processEvents() {
                     selectOption();
                 break;
 
-
             case GameState::RoomView:
                 if (roomView) {
                     roomView->handleInput(event.key.code);
                     roomView->update();
-
                     if ((event.key.code == sf::Keyboard::Enter || event.key.code == sf::Keyboard::Space) && roomView->isNearObject()) {
                         std::string obj = roomView->getNearbyObject();
-
                         if (obj == "Computer") {
                             state = GameState::ComputerView;
                             if (computerView) delete computerView;
                             computerView = new Computer(font, playerData);
                             computerView->init();
-                            std::cout << "Opened Computer\n";
                         }
                         else if (obj == "Aquarium") {
                             state = GameState::AquariumView;
                             if (aquariumView) delete aquariumView;
                             aquariumView = new Aquarium(font, playerData);
                             aquariumView->init();
-                            std::cout << "Entered Aquarium View\n";
                         }
                         else if (obj == "Shelves") {
                             state = GameState::ShelfView;
                             if (shelfView) delete shelfView;
                             shelfView = new Shelf(font, playerData);
                             shelfView->init();
-                            std::cout << "Entered Shelf View\n";
                         }
                         else if (obj == "Storage Rack") {
                             state = GameState::StorageView;
                             if (storageRackView) delete storageRackView;
                             storageRackView = new StorageRack(font, playerData, this);
                             storageRackView->init();
-                            std::cout << "Entered Storage Rack\n";
                         }
                         else if (obj == "Doors") {
                             state = GameState::StartMenu;
                             selectedIndex = 0;
                             menuItems.clear();
                             initMenu();
-                            std::cout << "Returned to Main Menu\n";
                         }
                     }
                 }
                 break;
 
-
             case GameState::ComputerView:
-                if (event.type == sf::Event::KeyPressed) {
-                    computerView->handleInput(event.key.code);
-
-                    if (computerView->shouldClose()) {
+                computerView->handleInput(event.key.code);
+                if (computerView->shouldClose()) {
+                    delete computerView;
+                    computerView = nullptr;
+                    state = GameState::RoomView;
+                    break;
+                }
+                if (event.key.code == sf::Keyboard::Enter) {
+                    ComputerSelection choice = computerView->getSelectedOption();
+                    if (choice == ComputerSelection::Shop) {
+                        state = GameState::ShopCategoryView;
+                        if (shopCategoryView) delete shopCategoryView;
+                        shopCategoryView = new ShopCategoryView(font);
+                        shopCategoryView->init();
+                    }
+                    else if (choice == ComputerSelection::Back) {
                         delete computerView;
                         computerView = nullptr;
                         state = GameState::RoomView;
-                        break;
                     }
-
-                    if (event.key.code == sf::Keyboard::Enter) {
-                        ComputerSelection choice = computerView->getSelectedOption();
-                        if (choice == ComputerSelection::Shop) {
-                            state = GameState::ShopCategoryView;
-                            if (shopCategoryView) delete shopCategoryView;
-                            shopCategoryView = new ShopCategoryView(font);
-                            shopCategoryView->init();
+                    const std::string& selectedGame = computerView->getSelectedMiniGame();
+                    if (!selectedGame.empty()) {
+                        if (selectedGame == "snake") {
+                            if (snakeGame) delete snakeGame;
+                            snakeGame = new SnakeGame(font, playerData, *this);
+                            snakeGame->init();
+                            state = GameState::MiniGame;
                         }
-                        else if (choice == ComputerSelection::Back) {
-                            delete computerView;
-                            computerView = nullptr;
-                            state = GameState::RoomView;
+                        else if (selectedGame == "catch") {
+                            if (catchGame) delete catchGame;
+                            catchGame = new CatchGame(font, playerData, *this);
+                            catchGame->init();
+                            state = GameState::MiniGame;
                         }
-
-                        const std::string& selectedGame = computerView->getSelectedMiniGame();
-                        if (!selectedGame.empty()) {
-                            std::cout << "Mini Game selected: " << selectedGame << "\n";
-                            if (selectedGame == "snake") {
-                                if (snakeGame) delete snakeGame;
-                                snakeGame = new SnakeGame(font, playerData, *this);
-                                snakeGame->init();
-                                state = GameState::MiniGame;
-                            }
-                            else if (selectedGame == "catch") {
-                                if (catchGame) delete catchGame;
-                                catchGame = new CatchGame(font, playerData, *this);
-                                catchGame->init();
-                                state = GameState::MiniGame;
-                            }
-                            else if (selectedGame == "dodge") {
-                                if (dodgeGame) delete dodgeGame;
-                                dodgeGame = new DodgeGame(font, playerData, *this);
-                                dodgeGame->init();
-                                state = GameState::MiniGame;
-                            }
-                            computerView->clearSelectedMiniGame();
-                            return;   
+                        else if (selectedGame == "dodge") {
+                            if (dodgeGame) delete dodgeGame;
+                            dodgeGame = new DodgeGame(font, playerData, *this);
+                            dodgeGame->init();
+                            state = GameState::MiniGame;
                         }
-
+                        computerView->clearSelectedMiniGame();
+                        return;
                     }
                 }
                 break;
 
-
-
-
             case GameState::StorageView:
-                std::cout << "In StorageView state\n";
                 if (storageRackView)
                     storageRackView->handleInput(event.key.code);
-
                 if (storageRackView && storageRackView->shouldClose()) {
-                    std::cout << "Detected close request in StorageRack\n";
                     storageRackView->resetCloseFlag();
                     delete storageRackView;
                     storageRackView = nullptr;
                     state = GameState::RoomView;
-                    std::cout << "Switched to RoomView\n";
                 }
                 break;
-
 
             case GameState::HatShop:
                 if (hatShopView)
                     hatShopView->handleInput(event.key.code);
-
                 if (hatShopView && hatShopView->shouldClose()) {
                     hatShopView->resetCloseFlag();
                     delete hatShopView;
@@ -254,7 +207,6 @@ void GameManager::processEvents() {
                     state = GameState::ShopCategoryView;
                 }
                 break;
-
 
             case GameState::MiniGame:
                 if (snakeGame)
@@ -265,11 +217,9 @@ void GameManager::processEvents() {
                     dodgeGame->handleInput(event.key.code);
                 break;
 
-
             case GameState::ShelfView:
                 if (shelfView)
                     shelfView->handleInput(event.key.code);
-
                 if (shelfView && shelfView->shouldClose()) {
                     shelfView->resetCloseFlag();
                     state = GameState::RoomView;
@@ -279,9 +229,7 @@ void GameManager::processEvents() {
             case GameState::ShopCategoryView:
                 if (shopCategoryView)
                     shopCategoryView->handleInput(event.key.code);
-
                 if (shopCategoryView && shopCategoryView->shouldClose()) {
-                    std::cout << "Leaving Shop Category\n";
                     shopCategoryView->resetCloseFlag();
                     state = GameState::ComputerView;
                 }
@@ -290,64 +238,49 @@ void GameManager::processEvents() {
                     if (selected != ShopSelection::None) {
                         switch (selected) {
                         case ShopSelection::HatShop:
-                            std::cout << "Hat Shop selected\n";
                             if (hatShopView) delete hatShopView;
                             hatShopView = new HatShopView(font, playerData, *this);
                             hatShopView->init();
                             state = GameState::HatShop;
                             break;
-
                         case ShopSelection::FishTankShop:
-                            std::cout << "Fish Tank Shop selected\n";
                             if (fishTankShopView) delete fishTankShopView;
                             fishTankShopView = new FishTankShopView(font, playerData, *this);
                             fishTankShopView->init();
                             state = GameState::FishTankShop;
                             break;
-
-
                         case ShopSelection::ShelfShop:
-                            std::cout << "Shelf Shop selected\n";
                             if (shelfShopView) delete shelfShopView;
                             shelfShopView = new ShelfShopView(font, playerData, *this);
                             shelfShopView->init();
                             state = GameState::ShelfShop;
                             break;
-
                         case ShopSelection::MiniGameShop:
-                            std::cout << "Mini Game Shop selected\n";
                             if (miniGameShopView) delete miniGameShopView;
                             miniGameShopView = new MiniGameShopView(font, playerData, *this);
                             miniGameShopView->init();
                             state = GameState::MiniGameShop;
                             break;
-
                         default:
                             break;
                         }
-
                         shopCategoryView->clearSelection();
                     }
                 }
-
-
                 break;
 
             case GameState::ShelfShop:
                 if (shelfShopView)
                     shelfShopView->handleInput(event.key.code);
-
                 if (shelfShopView && shelfShopView->shouldClose()) {
                     shelfShopView->resetCloseFlag();
                     state = GameState::ShopCategoryView;
                 }
                 break;
 
-
             case GameState::AquariumView:
                 if (aquariumView)
                     aquariumView->handleInput(event.key.code);
-
                 if (aquariumView && aquariumView->shouldClose()) {
                     aquariumView->resetCloseFlag();
                     state = GameState::RoomView;
@@ -357,7 +290,6 @@ void GameManager::processEvents() {
             case GameState::FishTankShop:
                 if (fishTankShopView)
                     fishTankShopView->handleInput(event.key.code);
-
                 if (fishTankShopView && fishTankShopView->shouldClose()) {
                     fishTankShopView->resetCloseFlag();
                     delete fishTankShopView;
@@ -369,36 +301,24 @@ void GameManager::processEvents() {
             case GameState::MiniGameShop:
                 if (miniGameShopView)
                     miniGameShopView->handleInput(event.key.code);
-
                 if (miniGameShopView && miniGameShopView->shouldClose()) {
                     miniGameShopView->resetCloseFlag();
                     delete miniGameShopView;
                     miniGameShopView = nullptr;
-
-                    // Always refresh desktop icons after buying a minigame
                     if (computerView) delete computerView;
                     computerView = new Computer(font, playerData);
                     computerView->init();
-
-                    // Go to shop categories, not computer desktop
                     if (shopCategoryView) delete shopCategoryView;
                     shopCategoryView = new ShopCategoryView(font);
                     shopCategoryView->init();
-
-                    // Highlight MiniGameShop (which is index 3 in your list)
                     shopCategoryView->setSelectionIndex(3);
-
                     state = GameState::ShopCategoryView;
                 }
-
-
                 break;
-
-
-                }
             }
         }
     }
+}
 
 
 void GameManager::update(float dt) {
@@ -434,7 +354,6 @@ void GameManager::update(float dt) {
             catchGame->update(dt);
         if (dodgeGame)
             dodgeGame->update(dt);
-
         if (snakeGame && snakeGame->shouldClose()) {
             delete snakeGame;
             snakeGame = nullptr;
@@ -451,14 +370,12 @@ void GameManager::update(float dt) {
             state = GameState::ComputerView;
         }
         break;
-
     }
 }
 
 
 void GameManager::render() {
     window.clear();
-
     switch (state) {
     case GameState::StartMenu:
         renderStartMenu();
@@ -502,73 +419,58 @@ void GameManager::render() {
         if (dodgeGame)
             dodgeGame->render(window);
         break;
-
     }
-
     window.display();
 }
 
-
-
 void GameManager::moveUp() {
-    if (menuItems.empty()) return; 
+    if (menuItems.empty()) return;
     if (selectedIndex > 0)
         selectedIndex--;
 }
 
 void GameManager::moveDown() {
-    if (menuItems.empty()) return; 
+    if (menuItems.empty()) return;
     if (selectedIndex < static_cast<int>(menuItems.size()) - 1)
         selectedIndex++;
 }
-
 
 void GameManager::selectOption() {
     if (menuItems.empty() || selectedIndex >= static_cast<int>(menuItems.size())) {
         std::cout << "Invalid menu state. Skipping selection.\n";
         return;
     }
-
     switch (selectedIndex) {
-    case 0: // New Game
+    case 0:
         std::cout << "New Game Selected - confirmation required\n";
         showingNewGameConfirm = true;
         confirmIndex = 0;
         break;
-
-
-    case 1: // Load Game
+    case 1:
         std::cout << "Load Game Selected\n";
         if (playerData.loadFromFile("save.json")) {
             std::cout << "Coins: " << playerData.coins << ", Hat: " << playerData.equippedHat << "\n";
-
             if (roomView) delete roomView;
             roomView = new Room(font, playerData);
             roomView->init();
-
             state = GameState::RoomView;
         }
         else {
             std::cout << "No save file found.\n";
         }
         break;
-
-    case 2: // Exit
+    case 2:
         window.close();
         break;
     }
 }
 
-
-
 void GameManager::renderStartMenu() {
-    window.draw(startMenuBgSprite); // Background first
-    for (const auto& item : menuItems) {
+    window.draw(startMenuBgSprite);
+    for (const auto& item : menuItems)
         window.draw(item);
-    }
-    // Draw confirmation popup if needed
+
     if (showingNewGameConfirm) {
-        // Draw white box
         sf::RectangleShape popup(sf::Vector2f(540, 170));
         popup.setFillColor(sf::Color::White);
         popup.setOutlineThickness(4.f);
@@ -576,13 +478,11 @@ void GameManager::renderStartMenu() {
         popup.setPosition(130, 180);
         window.draw(popup);
 
-        // Draw purple question text
         sf::Text question("Are you sure you want to run new game?\nPrevious save will be deleted", font, 26);
         question.setFillColor(sf::Color(120, 60, 255));
         question.setPosition(150, 200);
         window.draw(question);
 
-        // Draw Yes / No options
         sf::Text yesText("Yes", font, 32);
         sf::Text noText("No", font, 32);
 
@@ -598,25 +498,16 @@ void GameManager::renderStartMenu() {
         window.draw(yesText);
         window.draw(noText);
     }
-
 }
-
-
-
 
 void GameManager::updateStartMenu() {
     if (menuItems.empty()) return;
-
     for (size_t i = 0; i < menuItems.size(); ++i) {
-    
         menuItems[i].setFillColor(
             i == selectedIndex ? sf::Color(200, 170, 40) : sf::Color(120, 60, 255)
         );
     }
 }
-
-
-
 
 void GameManager::initMiniGame() {
     std::cout << "[Mini Game Initialized]\n";
@@ -648,7 +539,6 @@ void GameManager::drawCoinDisplay(sf::RenderWindow& window, sf::Font& font, int 
     currencyText.setPosition(pos);
     window.draw(currencyText);
 }
-
 
 template<typename T>
 void GameManager::handleShopNavigationInput(sf::Keyboard::Key key, int& selectionIndex, const std::vector<T>& items) {

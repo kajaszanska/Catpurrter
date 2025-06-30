@@ -26,7 +26,7 @@ void DodgeGame::resetGame() {
     playerRect.setSize(sf::Vector2f(40, 40));
     playerRect.setFillColor(sf::Color(200, 255, 200));
     playerRect.setOrigin(20, 20);
-    playerRect.setPosition(400, 340); // Center of 800x680 window
+    playerRect.setPosition(400, 340); 
     spawnTimer = 0.f;
     spawnDelay = 1.0f;
     dropSpeed = 220.f;
@@ -34,7 +34,7 @@ void DodgeGame::resetGame() {
 
 void DodgeGame::spawnDrop() {
     static std::mt19937 rng((unsigned)time(nullptr));
-    static std::uniform_int_distribution<int> edgeDist(0, 3); // 0:top, 1:right, 2:bottom, 3:left
+    static std::uniform_int_distribution<int> edgeDist(0, 3); 
     static std::uniform_real_distribution<float> wX(120.f, 680.f);
     static std::uniform_real_distribution<float> hY(80.f, 600.f);
 
@@ -42,7 +42,6 @@ void DodgeGame::spawnDrop() {
     sf::Vector2f pos, vel;
     float speed = dropSpeed;
 
-    // All drops move toward opposite edge (randomized within window)
     if (edge == 0) { // top
         pos = { wX(rng), 80.f };
         vel = { 0.f, speed };
@@ -72,7 +71,6 @@ void DodgeGame::spawnDrop() {
 void DodgeGame::update(float dt) {
     if (state != DodgeGameState::Playing) return;
 
-    // Player movement: WASD/arrow keys (diagonal movement allowed)
     const float moveSpeed = 370.f;
     sf::Vector2f move(0, 0);
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
@@ -85,10 +83,10 @@ void DodgeGame::update(float dt) {
         move.y += 1.f;
     if (move.x != 0 || move.y != 0) {
         float len = std::sqrt(move.x * move.x + move.y * move.y);
-        move /= len; // Normalize
+        move /= len; 
         playerRect.move(move * moveSpeed * dt);
     }
-    // Clamp player inside arena
+  
     auto pos = playerRect.getPosition();
     pos.x = std::max(120.f, std::min(680.f, pos.x));
     pos.y = std::max(80.f, std::min(600.f, pos.y));
@@ -176,7 +174,6 @@ void DodgeGame::handleInput(sf::Keyboard::Key key) {
     }
 }
 
-// --- Drawing functions, adapt from CatchGame or ask for code if you want those filled out ---
 
 void DodgeGame::render(sf::RenderWindow& window) {
     if (state == DodgeGameState::MainMenu) drawMenu(window);
@@ -355,7 +352,6 @@ void DodgeGame::drawGameOver(sf::RenderWindow& window) {
     over.setFillColor(sf::Color(255, 80, 80));
     window.draw(over);
 
-    // Options
     std::string opts[] = { "Restart", "Back to Menu" };
     sf::Text left(opts[0], font, 28);
     sf::Text right(opts[1], font, 28);

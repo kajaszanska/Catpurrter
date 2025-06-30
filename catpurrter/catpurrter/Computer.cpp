@@ -16,7 +16,6 @@ void Computer::init() {
     selected = ComputerSelection::None;
     closeRequested = false;
 
-    // Shop icon
     DesktopIcon shopIcon;
     shopIcon.id = "shop";
     shopIcon.label = "Shop";
@@ -24,32 +23,26 @@ void Computer::init() {
     shopIcon.rect.setFillColor(sf::Color(100, 100, 255));
     icons.push_back(shopIcon);
 
-    // Add mini game icons
     for (const auto& mg : playerData.ownedMiniGames) {
         DesktopIcon icon;
         icon.id = mg;
         if (mg == "snake") icon.label = "Snake";
         else if (mg == "catch") icon.label = "Catch Game";
         else if (mg == "dodge") icon.label = "Dodge Game";
-        else icon.label = mg; // fallback if new games added later
+        else icon.label = mg; 
         icon.rect.setSize({ 70.f, 70.f });
         icon.rect.setFillColor(sf::Color(120, 180, 120));
         icons.push_back(icon);
     }
-
- 
-    // Always start on first icon
     selectedIndex = 0;
 }
 
 void Computer::update() {
-    // nothing needed for highlight (handled in render)
-}
+  }
 
 void Computer::render(sf::RenderWindow& window) {
     window.draw(desktopBgSprite);
 
-    // Draw icons in grid
     float startX = 120.f, startY = 120.f;
     float gapX = 120.f, gapY = 110.f;
     int perRow = iconsPerRow;
@@ -60,19 +53,17 @@ void Computer::render(sf::RenderWindow& window) {
         float x = startX + col * gapX;
         float y = startY + row * gapY;
 
-        // Rectangle (icon)
         auto rect = icons[i].rect;
         rect.setPosition(x, y);
         rect.setOutlineColor(i == selectedIndex ? sf::Color::Yellow : sf::Color(40, 40, 40));
         rect.setOutlineThickness(i == selectedIndex ? 4.f : 2.f);
         window.draw(rect);
 
-        // Label below
         sf::Text label(icons[i].label, font, 24);
         label.setFillColor(sf::Color::White);
         sf::FloatRect bounds = label.getLocalBounds();
         label.setOrigin(bounds.width / 2.f, 0);
-        label.setPosition(x + 35.f, y + 75.f); // center under square
+        label.setPosition(x + 35.f, y + 75.f);
         window.draw(label);
     }
 }

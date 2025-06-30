@@ -2,7 +2,9 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <string>
+#include <map>
 
+// Game entities & views
 #include "Player.h"
 #include "Room.h"
 #include "Aquarium.h"
@@ -11,11 +13,16 @@
 #include "Computer.h"
 #include "ShopCategory.h"
 
+// Shop views
 #include "HatShopView.h"
 #include "ShelfShopView.h"
 #include "FishTankShopView.h"
 #include "MiniGameShopView.h"
 
+// Forward declarations for minigames
+class SnakeGame;
+class CatchGame;
+class DodgeGame;
 
 enum class GameState {
     StartMenu,
@@ -32,108 +39,105 @@ enum class GameState {
     MiniGame
 };
 
-class SnakeGame;
-class CatchGame;
-class DodgeGame;
-
 class GameManager {
 public:
-
-    void update(float dt);
     GameManager();
     void run();
+    void update(float dt);
 
-    Room* getRoomView() { return roomView; }
-
-
-    void setState(GameState state); 
-
+    // State accessors
+    void setState(GameState state);
     GameState getState() const;
 
+    // Drawing utilities
     void drawSectionTitle(sf::RenderWindow& window, sf::Font& font, const std::string& title);
     void drawCoinDisplay(sf::RenderWindow& window, sf::Font& font, int coins, sf::Vector2f pos = { 500.f, 50.f });
 
+    // Views
+    Room* getRoomView() { return roomView; }
+
 private:
+    // ==== Core SFML ====
     sf::RenderWindow window;
     sf::Font font;
-    std::vector<sf::Text> menuItems;
-    int selectedIndex;
+    sf::Clock frameClock;
 
-    sf::Texture startMenuBgTexture;
-    sf::Sprite startMenuBgSprite;
-
-
+    // ==== Game State ====
     GameState state;
     Player playerData;
 
-    template<typename T>
-    void handleShopNavigationInput(sf::Keyboard::Key key, int& selectionIndex, const std::vector<T>& items);
+    // ==== Menu (Start/Menu) ====
+    std::vector<sf::Text> menuItems;
+    int selectedIndex = 0;
+    sf::Texture startMenuBgTexture;
+    sf::Sprite startMenuBgSprite;
 
-
-    void processEvents();
-   
-    void render();
-
-    void renderStartMenu();
-
-    void updateStartMenu();
-
+    // Start menu confirmation
     bool showingNewGameConfirm = false;
-    int confirmIndex = 0; // 0 = Yes, 1 = No
+    int confirmIndex = 0;
 
+    // ==== Key State (for continuous movement) ====
+    std::map<sf::Keyboard::Key, bool> keyState;
+
+    // ==== Views & UI Screens ====
+    Room* roomView = nullptr;
+    Aquarium* aquariumView = nullptr;
+    Shelf* shelfView = nullptr;
+    StorageRack* storageRackView = nullptr;
+    Computer* computerView = nullptr;
+    ShopCategoryView* shopCategoryView = nullptr;
+
+    // Shop screens
+    HatShopView* hatShopView = nullptr;
+    ShelfShopView* shelfShopView = nullptr;
+    FishTankShopView* fishTankShopView = nullptr;
+    MiniGameShopView* miniGameShopView = nullptr;
+
+    // ==== Mini Games ====
     SnakeGame* snakeGame = nullptr;
     CatchGame* catchGame = nullptr;
     DodgeGame* dodgeGame = nullptr;
 
-
-
-    void loadFont();
-    void initMenu();
-    void moveUp();
-    void moveDown();
-    void selectOption();
-
+    // ==== Menu/Selection indices (various UI screens) ====
+    int computerSelectionIndex = 0;
     std::vector<sf::Text> computerOptions;
-    int computerSelectionIndex;
 
-    std::vector<sf::Text> storageOptions;
     int storageSelectionIndex = 0;
+    std::vector<sf::Text> storageOptions;
 
-    std::vector<sf::Text> shelfOptions;
     int shelfSelectionIndex = 0;
+    std::vector<sf::Text> shelfOptions;
 
     int shopSelectionIndex = 0;
-    std::vector<sf::Text> shopVisualItems; 
+    std::vector<sf::Text> shopVisualItems;
 
-    void initMiniGame();
-    void renderMiniGame();
-    void handleMiniGameInput(sf::Keyboard::Key key);
-
-    void handleContinuousMovement();
-    std::map<sf::Keyboard::Key, bool> keyState;
-
+    // Shop categories (for navigation)
     enum class ShopCategory {
         Hat,
         Shelf,
         FishTank,
         MiniGame
     };
-
     std::vector<std::pair<sf::Text, ShopCategory>> shopCategoryOptions;
     int shopCategoryIndex = 0;
 
-    sf::Clock frameClock;
+    // ==== Core logic helpers ====
+    void processEvents();
+    void render();
+    void renderStartMenu();
+    void updateStartMenu();
+    void loadFont();
+    void initMenu();
+    void moveUp();
+    void moveDown();
+    void selectOption();
+    void handleContinuousMovement();
 
+    // ==== Mini Game helpers ====
+    void initMiniGame();
+    void renderMiniGame();
 
-    Room* roomView = nullptr;
-    Aquarium* aquariumView = nullptr;
-    Shelf* shelfView = nullptr; 
-    StorageRack* storageRackView = nullptr;
-    Computer* computerView = nullptr;
-    ShopCategoryView* shopCategoryView = nullptr;
-    HatShopView* hatShopView = nullptr;
-    ShelfShopView* shelfShopView = nullptr;
-    FishTankShopView* fishTankShopView = nullptr;
-    MiniGameShopView* miniGameShopView = nullptr;
-
+    // ==== Shop Navigation (templated) ====
+    template<typename T>
+    void handleShopNavigationInput(sf::Keyboard::Key key, int& selectionIndex, const std::vector<T>& items);
 };

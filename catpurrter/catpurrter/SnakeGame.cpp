@@ -65,8 +65,8 @@ void SnakeGame::moveSnake() {
         gameOver = true;
         gameFinished = true;
         coinsEarned = score * 2; // 2 coins per food
-        state = SnakeGameState::GameOver; // <-- Make sure you enter GameOver state
-        coinsAdded = false; // Reset flag for new game
+        state = SnakeGameState::GameOver; 
+        coinsAdded = false; 
         return;
     }
     // Check self-collision
@@ -93,7 +93,7 @@ void SnakeGame::moveSnake() {
 
 void SnakeGame::handleInput(sf::Keyboard::Key key) {
     if (state == SnakeGameState::MainMenu) {
-        constexpr int numOptions = 3; // For 3 options
+        constexpr int numOptions = 3; 
         if (key == sf::Keyboard::Up || key == sf::Keyboard::W) {
             if (menuIndex > 0) menuIndex--;
         }
@@ -101,7 +101,7 @@ void SnakeGame::handleInput(sf::Keyboard::Key key) {
             if (menuIndex < numOptions - 1) menuIndex++;
         }
         if (key == sf::Keyboard::Enter) {
-            if (menuIndex == 0) { // Play
+            if (menuIndex == 0) {  
                 resetGame();
                 state = SnakeGameState::Playing;
             }
@@ -119,11 +119,10 @@ void SnakeGame::handleInput(sf::Keyboard::Key key) {
     else if (state == SnakeGameState::Instructions) {
         if (key == sf::Keyboard::Escape || key == sf::Keyboard::Enter) {
             state = SnakeGameState::MainMenu;
-            menuIndex = 0; // Always reset!
+            menuIndex = 0; 
         }
     }
-    else if (state == SnakeGameState::Playing) {
-        // Directional keys
+    else if (state == SnakeGameState::Playing) {  
         if ((key == sf::Keyboard::Up || key == sf::Keyboard::W) && direction.y != 1)
             nextDirection = { 0, -1 };
         else if ((key == sf::Keyboard::Down || key == sf::Keyboard::S) && direction.y != -1)
@@ -232,10 +231,9 @@ void SnakeGame::drawMenu(sf::RenderWindow& window) {
     // Menu options
     std::string options[] = { "Play", "Instructions", "Exit" };
     int numOptions = 3;
-    float optionSpacing = 14.f; // Much tighter
+    float optionSpacing = 14.f; 
     float optionFontSize = 32.f;
 
-    // Compute actual total menu height (title + options)
     float totalMenuHeight = titleBounds.height;
     std::vector<sf::FloatRect> optionBounds(numOptions);
 
@@ -245,8 +243,8 @@ void SnakeGame::drawMenu(sf::RenderWindow& window) {
         totalMenuHeight += optionBounds[i].height;
         if (i > 0) totalMenuHeight += optionSpacing;
     }
-    // Add spacing between title and first option
-    float titleToOption = 28.f; // adjust to your liking
+ 
+    float titleToOption = 28.f; 
     totalMenuHeight += titleToOption;
 
     float startY = centerY - totalMenuHeight / 2.0f;
@@ -256,7 +254,6 @@ void SnakeGame::drawMenu(sf::RenderWindow& window) {
     title.setFillColor(sf::Color::Cyan);
     window.draw(title);
 
-    // Draw options, now spaced much more tightly
     float currY = startY + titleBounds.height + titleToOption;
     for (int i = 0; i < numOptions; ++i) {
         sf::Text t(options[i], font, (unsigned)optionFontSize);
@@ -269,7 +266,7 @@ void SnakeGame::drawMenu(sf::RenderWindow& window) {
         currY += tBounds.height + optionSpacing;
     }
 
-    // Game Over message (if needed)
+    // Game Over message
     if (gameOver) {
         float popupWidth = static_cast<float>(gridWidth * tileSize) + 200.f;
         float popupHeight = static_cast<float>(gridHeight * tileSize) + 100.f;
@@ -281,20 +278,17 @@ void SnakeGame::drawMenu(sf::RenderWindow& window) {
         sf::FloatRect overBounds = over.getLocalBounds();
         over.setOrigin(overBounds.left + overBounds.width / 2.f, overBounds.top + overBounds.height / 2.f);
         over.setPosition(centerX, centerY);
-        over.setFillColor(sf::Color::White); // Or another color if you prefer
+        over.setFillColor(sf::Color::White); 
         window.draw(over);
     }
 
 }
 
 
+void SnakeGame::drawGame(sf::RenderWindow& window) {   
+    window.clear(sf::Color(80, 0, 120));  
 
-
-void SnakeGame::drawGame(sf::RenderWindow& window) {
-    // Clear window with purple background (matches your main menu)
-    window.clear(sf::Color(80, 0, 120));  // <-- purple
-
-    // Draw play area (inner rectangle)
+    // play area 
     sf::RectangleShape bg(sf::Vector2f(
         static_cast<float>(gridWidth * tileSize),
         static_cast<float>(gridHeight * tileSize)
@@ -304,7 +298,7 @@ void SnakeGame::drawGame(sf::RenderWindow& window) {
     bg.setPosition(100, 100);
     window.draw(bg);
 
-    // Draw food
+    // food
     sf::RectangleShape foodRect(sf::Vector2f(
         static_cast<float>(tileSize - 2),
         static_cast<float>(tileSize - 2)
@@ -318,7 +312,7 @@ void SnakeGame::drawGame(sf::RenderWindow& window) {
 
     window.draw(foodRect);
 
-    // Draw snake
+    //  snake
     for (size_t i = 0; i < snake.size(); ++i) {
         sf::RectangleShape part(sf::Vector2f(static_cast<float>(tileSize - 4), static_cast<float>(tileSize - 4)));
         part.setPosition(
@@ -329,9 +323,9 @@ void SnakeGame::drawGame(sf::RenderWindow& window) {
         window.draw(part);
     }
 
-    // Score: yellow, left above play area
+    // score
     sf::Text scoreText("Score: " + std::to_string(score), font, 32);
-    scoreText.setFillColor(sf::Color(255, 220, 60));  // bright yellow
+    scoreText.setFillColor(sf::Color(255, 220, 60));  
     scoreText.setPosition(100, 60);
     window.draw(scoreText);
 }
@@ -348,11 +342,10 @@ void SnakeGame::drawPause(sf::RenderWindow& window) {
     rect.setPosition(rectPos);
     window.draw(rect);
 
-    // Center the "Paused" text in the rectangle
     sf::Text pauseText("Paused", font, 32);
     sf::FloatRect pauseBounds = pauseText.getLocalBounds();
     pauseText.setOrigin(pauseBounds.left + pauseBounds.width / 2.0f, pauseBounds.top + pauseBounds.height / 2.0f);
-    pauseText.setPosition(rectPos.x + rectSize.x / 2.0f, rectPos.y + 30); // 30 pixels from top of rect
+    pauseText.setPosition(rectPos.x + rectSize.x / 2.0f, rectPos.y + 30);
     pauseText.setFillColor(sf::Color::White);
     window.draw(pauseText);
 
@@ -361,7 +354,7 @@ void SnakeGame::drawPause(sf::RenderWindow& window) {
         sf::Text t(opts[i], font, 28);
         sf::FloatRect tBounds = t.getLocalBounds();
         t.setOrigin(tBounds.left + tBounds.width / 2.0f, tBounds.top + tBounds.height / 2.0f);
-        // Centered horizontally, spaced out in the rectangle
+       
         t.setPosition(rectPos.x + rectSize.x / 4.0f + i * rectSize.x / 2.0f, rectPos.y + 80);
         t.setFillColor(i == pauseIndex ? sf::Color(230, 200, 40) : sf::Color(180, 80, 200));
         window.draw(t);
@@ -376,13 +369,12 @@ void SnakeGame::drawInstructions(sf::RenderWindow& window) {
     float centerX = 60 + popupWidth / 2.0f;
     float centerY = 60 + popupHeight / 2.0f;
 
-    // Purple background
+   
     sf::RectangleShape bg(sf::Vector2f(popupWidth, popupHeight));
     bg.setFillColor(sf::Color(80, 0, 120, 230));
     bg.setPosition(60, 60);
     window.draw(bg);
-
-    // Title: "How to Play Snake", cyan, centered
+      
     sf::Text title("How to Play Snake", font, 38);
     sf::FloatRect titleBounds = title.getLocalBounds();
     title.setOrigin(titleBounds.left + titleBounds.width / 2.0f, titleBounds.top + titleBounds.height / 2.0f);
@@ -391,7 +383,7 @@ void SnakeGame::drawInstructions(sf::RenderWindow& window) {
     title.setFillColor(sf::Color::Cyan);
     window.draw(title);
 
-    // Instruction text, white, centered below title
+    // Instruction
     std::string msg =
         "Control the snake with arrow keys or WASD.\n"
         "Eat the red food. Each food gives you 2 coins.\n"
@@ -421,42 +413,34 @@ void SnakeGame::drawGameOver(sf::RenderWindow& window) {
     bg.setFillColor(sf::Color(60, 0, 30, 230));
     bg.setPosition(60, 60);
     window.draw(bg);
-
-    // "Game Over!" message, centered
+ 
     sf::Text over("Game Over! Coins earned: " + std::to_string(coinsEarned), font, 36);
     sf::FloatRect overBounds = over.getLocalBounds();
     over.setOrigin(overBounds.left + overBounds.width / 2.f, overBounds.top + overBounds.height / 2.f);
-    over.setPosition(centerX, centerY - 60); // Centered, adjust Y for your layout
+    over.setPosition(centerX, centerY - 60); 
     over.setFillColor(sf::Color(255, 80, 80));
     window.draw(over);
 
-    // Side-by-side options
     std::string opts[] = { "Restart", "Back to Menu" };
     sf::Text left(opts[0], font, 28);
     sf::Text right(opts[1], font, 28);
 
-    // Get bounding boxes
     sf::FloatRect leftBounds = left.getLocalBounds();
     sf::FloatRect rightBounds = right.getLocalBounds();
 
-    // Desired space between option edges (not centers)
     float desiredGap = 50.f;
 
-    // Calculate total width
     float totalWidth = leftBounds.width + rightBounds.width + desiredGap;
 
-    // X positions
     float leftX = centerX - totalWidth / 2.f + leftBounds.width / 2.f;
     float rightX = centerX + totalWidth / 2.f - rightBounds.width / 2.f;
     float y = centerY + 10.f;
 
-    // Draw left option
     left.setOrigin(leftBounds.left + leftBounds.width / 2.f, leftBounds.top + leftBounds.height / 2.f);
     left.setPosition(leftX, y);
     left.setFillColor(gameOverIndex == 0 ? sf::Color(200, 170, 40) : sf::Color::White);
     window.draw(left);
 
-    // Draw right option
     right.setOrigin(rightBounds.left + rightBounds.width / 2.f, rightBounds.top + rightBounds.height / 2.f);
     right.setPosition(rightX, y);
     right.setFillColor(gameOverIndex == 1 ? sf::Color(200, 170, 40) : sf::Color::White);

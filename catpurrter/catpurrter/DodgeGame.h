@@ -7,7 +7,6 @@
 
 enum class DodgeGameState { MainMenu, Playing, Paused, Instructions, GameOver };
 
-// Drop that moves from spawnEdge toward opposite side
 struct DodgeDrop {
     sf::CircleShape shape;
     sf::Vector2f velocity;
@@ -41,7 +40,6 @@ private:
     int menuIndex, pauseIndex, gameOverIndex;
     bool closeRequested, coinsAdded;
 
-    // Gameplay
     int score, coinsEarned, lives;
     sf::RectangleShape playerRect;
     std::vector<DodgeDrop> drops;
