@@ -5,6 +5,8 @@
 #include <algorithm>
 // Im implementing <ranges> to replace any use of std::find with std::ranges::find
 #include <ranges> 
+// Im using <thread> to save player data in a separate thread after purchase
+#include <thread>
 
 MiniGameShopView::MiniGameShopView(sf::Font& font, Player& player, GameManager& gm)
     : font(font), playerData(player), gameManager(gm), selectedIndex(0) {
@@ -70,7 +72,10 @@ void MiniGameShopView::handleInput(sf::Keyboard::Key key) {
         else if (playerData.coins >= price) {
             playerData.coins -= price;
             playerData.ownedMiniGames.push_back(id);
-            playerData.saveToFile("saves/save.json");
+            std::thread saveThread([&]() {
+                playerData.saveToFile("saves/save.json");
+                });
+            saveThread.detach();
             std::cout << "Bought mini game: " << id << "\n";
             updateOptionColors();
         }

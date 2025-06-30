@@ -1,6 +1,9 @@
 #include "DodgeGame.h"
 #include <random>
 #include <cmath>
+// Im using <thread> to save player data in a separate thread after game over
+#include <thread>
+
 
 DodgeGame::DodgeGame(const sf::Font& font, Player& player, GameManager& gm)
     : font(font), player(player), gameManager(gm)
@@ -160,8 +163,10 @@ void DodgeGame::handleInput(sf::Keyboard::Key key) {
     }
     else if (state == DodgeGameState::GameOver) {
         if (!coinsAdded) {
-            player.coins += coinsEarned;
-            player.saveToFile("saves/save.json");
+            std::thread saveThread([&]() {
+                player.saveToFile("saves/save.json");
+                });
+            saveThread.detach();
             coinsAdded = true;
         }
         if (key == sf::Keyboard::Left || key == sf::Keyboard::A) gameOverIndex = 0;

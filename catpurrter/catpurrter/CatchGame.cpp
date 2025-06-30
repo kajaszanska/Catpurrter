@@ -2,6 +2,9 @@
 #include <random>
 #include <iostream>
 #include <sstream>
+// Im using <thread> to save player data in a separate thread after game over
+#include <thread>
+
 
 CatchGame::CatchGame(const sf::Font& font, Player& player, GameManager& gm)
     : font(font), player(player), gameManager(gm)
@@ -144,8 +147,10 @@ void CatchGame::handleInput(sf::Keyboard::Key key) {
     else if (state == CatchGameState::GameOver) {
         if (!coinsAdded) {
             coinsEarned = std::max(0, score);  
-            player.coins += coinsEarned;
-            player.saveToFile("saves/save.json");
+            std::thread saveThread([&]() {
+                player.saveToFile("saves/save.json");
+                });
+            saveThread.detach();
             coinsAdded = true;
         }
 

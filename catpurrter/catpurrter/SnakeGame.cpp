@@ -2,6 +2,9 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <sstream>
+// Im using <thread> to save player data in a separate thread after game over
+#include <thread>
+
 
 #include "Player.h"
 #include "GameManager.h"
@@ -158,8 +161,10 @@ void SnakeGame::handleInput(sf::Keyboard::Key key) {
     }
     else if (state == SnakeGameState::GameOver) {
         if (!coinsAdded) {
-            player.coins += coinsEarned;
-            player.saveToFile("saves/save.json");
+            std::thread saveThread([&]() {
+                player.saveToFile("saves/save.json");
+                });
+            saveThread.detach();
             coinsAdded = true;
         }
         if (key == sf::Keyboard::Left || key == sf::Keyboard::A) {
