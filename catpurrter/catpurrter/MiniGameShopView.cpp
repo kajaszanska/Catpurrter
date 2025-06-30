@@ -8,8 +8,8 @@ MiniGameShopView::MiniGameShopView(sf::Font& font, Player& player, GameManager& 
 
     games = {
         { "snake", "Snake", 100 },
-        { "tetris", "Tetris", 150 },
-        { "pong", "Pong", 120 }
+        {"catch", "Catch Game", 150 },
+        { "dodge", "Dodge Game", 120 }
     };
 
     init();

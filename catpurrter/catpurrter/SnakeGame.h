@@ -12,7 +12,8 @@ enum class SnakeGameState {
     MainMenu,
     Playing,
     Paused,
-    Instructions
+    Instructions,
+    GameOver
 };
 
 class SnakeGame {
@@ -29,6 +30,11 @@ public:
     bool finishedGame() const { return gameFinished; }
 
 private:
+    int gameOverIndex = 0; // 0 = Restart, 1 = Back to menu
+    void drawGameOver(sf::RenderWindow& window);
+
+    bool coinsAdded = false;
+
     void resetGame();
     void spawnFood();
     void moveSnake();

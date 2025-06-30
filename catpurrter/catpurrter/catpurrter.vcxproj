@@ -143,7 +143,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Aquarium.cpp" />
+    <ClCompile Include="CatchGame.cpp" />
     <ClCompile Include="Computer.cpp" />
+    <ClCompile Include="DodgeGame.cpp" />
     <ClCompile Include="FishTankShopView.cpp" />
     <ClCompile Include="GameManager.cpp" />
     <ClCompile Include="HatShopView.cpp" />
@@ -159,7 +161,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aquarium.h" />
+    <ClInclude Include="CatchGame.h" />
     <ClInclude Include="Computer.h" />
+    <ClInclude Include="DodgeGame.h" />
     <ClInclude Include="FishTankShopView.h" />
     <ClInclude Include="GameManager.h" />
     <ClInclude Include="HatShopView.h" />

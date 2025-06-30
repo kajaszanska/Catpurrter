@@ -28,11 +28,10 @@ void Computer::init() {
     for (const auto& mg : playerData.ownedMiniGames) {
         DesktopIcon icon;
         icon.id = mg;
-        // Show pretty label for known games, or just ID
         if (mg == "snake") icon.label = "Snake";
-        else if (mg == "tetris") icon.label = "Tetris";
-        else if (mg == "pong") icon.label = "Pong";
-        else icon.label = mg;
+        else if (mg == "catch") icon.label = "Catch Game";
+        else if (mg == "dodge") icon.label = "Dodge Game";
+        else icon.label = mg; // fallback if new games added later
         icon.rect.setSize({ 70.f, 70.f });
         icon.rect.setFillColor(sf::Color(120, 180, 120));
         icons.push_back(icon);

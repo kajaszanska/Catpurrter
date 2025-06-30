@@ -6,6 +6,8 @@
 #include "StorageRack.h"
 #include "Computer.h"
 #include "SnakeGame.h"
+#include "CatchGame.h"
+#include "DodgeGame.h"
 
 
 
@@ -202,11 +204,26 @@ void GameManager::processEvents() {
                                 snakeGame->init();
                                 state = GameState::MiniGame;
                             }
-
+                            else if (selectedGame == "catch") {
+                                if (catchGame) delete catchGame;
+                                catchGame = new CatchGame(font, playerData, *this);
+                                catchGame->init();
+                                state = GameState::MiniGame;
+                            }
+                            else if (selectedGame == "dodge") {
+                                if (dodgeGame) delete dodgeGame;
+                                dodgeGame = new DodgeGame(font, playerData, *this);
+                                dodgeGame->init();
+                                state = GameState::MiniGame;
+                            }
                             computerView->clearSelectedMiniGame();
+                            return;   
                         }
+
                     }
-                    break;
+                }
+                break;
+
 
 
 
@@ -240,8 +257,14 @@ void GameManager::processEvents() {
 
 
             case GameState::MiniGame:
-                handleMiniGameInput(event.key.code);
+                if (snakeGame)
+                    snakeGame->handleInput(event.key.code);
+                else if (catchGame)
+                    catchGame->handleInput(event.key.code);
+                else if (dodgeGame)
+                    dodgeGame->handleInput(event.key.code);
                 break;
+
 
             case GameState::ShelfView:
                 if (shelfView)
@@ -376,7 +399,7 @@ void GameManager::processEvents() {
             }
         }
     }
-}
+
 
 void GameManager::update(float dt) {
     switch (state) {
@@ -407,12 +430,28 @@ void GameManager::update(float dt) {
     case GameState::MiniGame:
         if (snakeGame)
             snakeGame->update(dt);
+        if (catchGame)
+            catchGame->update(dt);
+        if (dodgeGame)
+            dodgeGame->update(dt);
+
         if (snakeGame && snakeGame->shouldClose()) {
             delete snakeGame;
             snakeGame = nullptr;
             state = GameState::ComputerView;
         }
+        if (catchGame && catchGame->shouldClose()) {
+            delete catchGame;
+            catchGame = nullptr;
+            state = GameState::ComputerView;
+        }
+        if (dodgeGame && dodgeGame->shouldClose()) {
+            delete dodgeGame;
+            dodgeGame = nullptr;
+            state = GameState::ComputerView;
+        }
         break;
+
     }
 }
 
@@ -458,6 +497,10 @@ void GameManager::render() {
     case GameState::MiniGame:
         if (snakeGame)
             snakeGame->render(window);
+        if (catchGame)
+            catchGame->render(window);
+        if (dodgeGame)
+            dodgeGame->render(window);
         break;
 
     }
@@ -588,14 +631,6 @@ void GameManager::renderMiniGame() {
     text.setPosition(100.f, 200.f);
     window.draw(text);
 }
-
-void GameManager::handleMiniGameInput(sf::Keyboard::Key key) {
-    if (key == sf::Keyboard::Escape) {
-        std::cout << "Exiting Mini Game\n";
-        state = GameState::ComputerView;
-    }
-}
-
 
 void GameManager::drawSectionTitle(sf::RenderWindow& window, sf::Font& font, const std::string& title) {
     sf::Text titleText(title, font, 36);

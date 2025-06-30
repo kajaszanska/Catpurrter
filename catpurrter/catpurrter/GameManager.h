@@ -33,6 +33,8 @@ enum class GameState {
 };
 
 class SnakeGame;
+class CatchGame;
+class DodgeGame;
 
 class GameManager {
 public:
@@ -80,6 +82,9 @@ private:
     int confirmIndex = 0; // 0 = Yes, 1 = No
 
     SnakeGame* snakeGame = nullptr;
+    CatchGame* catchGame = nullptr;
+    DodgeGame* dodgeGame = nullptr;
+
 
 
     void loadFont();
