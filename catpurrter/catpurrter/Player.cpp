@@ -3,12 +3,27 @@
 #include <iostream>
 // Im using <filesystem> for file existence, directory creation, disk space checks, and save path validation.
 #include <filesystem> 
+// Im using <regex> to validate save file names before loading/saving.
+#include <regex>
+
 
 using json = nlohmann::json;
+
+// Im checking if the save file name is valid: only letters, numbers, underscores, and ends with .json
+bool isValidSaveFileName(const std::string& filename) {
+    std::regex pattern("^[A-Za-z0-9_]+\\.json$"); 
+    return std::regex_match(filename, pattern);
+}
+
 
 Player::Player() : coins(100), equippedHat("none") {}
 
 bool Player::loadFromFile(const std::string& filename) {
+    // Using regex to validate file name before proceeding
+    if (!isValidSaveFileName(std::filesystem::path(filename).filename().string())) {
+        std::cerr << "Invalid save file name: " << filename << std::endl;
+        return false;
+    }
     // Im using filesystem to check if the file exists before opening
     if (!std::filesystem::exists(filename)) {
         std::cerr << "File does not exist: " << filename << std::endl;
@@ -55,6 +70,11 @@ bool Player::loadFromFile(const std::string& filename) {
 }
 
 void Player::saveToFile(const std::string& filename) {
+    // Use regex to validate file name before proceeding
+    if (!isValidSaveFileName(std::filesystem::path(filename).filename().string())) {
+        std::cerr << "Invalid save file name: " << filename << std::endl;
+        return;
+    }
     // --- Restrict save location for security ---
     std::filesystem::path saveDir = "saves";
     std::filesystem::create_directories(saveDir); // Making sure save dir exists
