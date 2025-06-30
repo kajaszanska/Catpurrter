@@ -119,7 +119,7 @@ void GameManager::processStartMenuEvents(const sf::Event& event) {
                 playerData.coins = 10000;
                 playerData.equippedHat = "none";
                 playerData.unlockedHats = {};
-                playerData.saveToFile("save.json");
+                playerData.saveToFile("saves/save.json");
                 if (roomView) delete roomView;
                 roomView = new Room(font, playerData);
                 roomView->init();
@@ -486,7 +486,7 @@ void GameManager::selectOption() {
         break;
     case 1:
         std::cout << "Load Game Selected\n";
-        if (playerData.loadFromFile("save.json")) {
+        if (playerData.loadFromFile("saves/save.json")) {
             std::cout << "Coins: " << playerData.coins << ", Hat: " << playerData.equippedHat << "\n";
             if (roomView) delete roomView;
             roomView = new Room(font, playerData);

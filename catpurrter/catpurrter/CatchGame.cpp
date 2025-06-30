@@ -145,7 +145,7 @@ void CatchGame::handleInput(sf::Keyboard::Key key) {
         if (!coinsAdded) {
             coinsEarned = std::max(0, score);  
             player.coins += coinsEarned;
-            player.saveToFile("save.json");
+            player.saveToFile("saves/save.json");
             coinsAdded = true;
         }
 

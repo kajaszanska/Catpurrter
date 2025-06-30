@@ -74,7 +74,7 @@ void FishTankShopView::handleInput(sf::Keyboard::Key key) {
         else if (playerData.coins >= price) {
             playerData.coins -= price;
             playerData.aquariumContents.push_back(selectedId);
-            playerData.saveToFile("save.json");
+            playerData.saveToFile("saves/save.json");
             std::cout << "Bought: " << selectedId << "\n";
             updateOptionColors();
             if (gameManager.getRoomView())

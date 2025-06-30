@@ -69,7 +69,7 @@ void MiniGameShopView::handleInput(sf::Keyboard::Key key) {
         else if (playerData.coins >= price) {
             playerData.coins -= price;
             playerData.ownedMiniGames.push_back(id);
-            playerData.saveToFile("save.json");
+            playerData.saveToFile("saves/save.json");
             std::cout << "Bought mini game: " << id << "\n";
             updateOptionColors();
         }

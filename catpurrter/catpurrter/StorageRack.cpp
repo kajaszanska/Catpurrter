@@ -94,10 +94,8 @@ void StorageRack::render(sf::RenderWindow& window) {
 }
 
 void StorageRack::handleInput(sf::Keyboard::Key key) {
-    std::cout << "[StorageRack::handleInput] Got key: " << key << std::endl;
-
-    if (key == sf::Keyboard::Escape) {
-        std::cout << "[StorageRack] ESC pressed!\n";
+   
+    if (key == sf::Keyboard::Escape) {   
         closeRequested = true;
         return;
     }
@@ -133,7 +131,7 @@ void StorageRack::handleInput(sf::Keyboard::Key key) {
                 playerData.equippedHat = selectedHat;
                 std::cout << "Equipped hat: " << playerData.equippedHat << std::endl;
             }
-            playerData.saveToFile("save.json");
+            playerData.saveToFile("saves/save.json");
         }
     }
 }

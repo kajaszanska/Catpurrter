@@ -700,9 +700,7 @@ Room::RoomObject Room::createComputer() {
         obj.rect.setSize(sf::Vector2f(static_cast<float>(texSize.x), static_cast<float>(texSize.y)));
         obj.rect.setTexture(obj.texture.get());
         obj.rect.setTextureRect(sf::IntRect(0, 0, texSize.x, texSize.y));
-        obj.rect.setPosition(300, 200);
-        std::cout << "Loaded computer.png, size: "
-            << texSize.x << "x" << texSize.y << std::endl;
+        obj.rect.setPosition(300, 200);       
     }
     else {
         obj.rect.setSize({ 200, 100 });

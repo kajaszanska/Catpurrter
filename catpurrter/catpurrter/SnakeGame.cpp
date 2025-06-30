@@ -159,7 +159,7 @@ void SnakeGame::handleInput(sf::Keyboard::Key key) {
     else if (state == SnakeGameState::GameOver) {
         if (!coinsAdded) {
             player.coins += coinsEarned;
-            player.saveToFile("save.json");
+            player.saveToFile("saves/save.json");
             coinsAdded = true;
         }
         if (key == sf::Keyboard::Left || key == sf::Keyboard::A) {

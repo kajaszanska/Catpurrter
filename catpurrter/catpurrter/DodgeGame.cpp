@@ -161,7 +161,7 @@ void DodgeGame::handleInput(sf::Keyboard::Key key) {
     else if (state == DodgeGameState::GameOver) {
         if (!coinsAdded) {
             player.coins += coinsEarned;
-            player.saveToFile("save.json");
+            player.saveToFile("saves/save.json");
             coinsAdded = true;
         }
         if (key == sf::Keyboard::Left || key == sf::Keyboard::A) gameOverIndex = 0;
