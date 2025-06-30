@@ -1,6 +1,9 @@
 #include "ShelfShopView.h"
 #include "GameManager.h"
+
 #include <iostream>
+// Im implementing <ranges> to replace any use of std::find with std::ranges::find
+#include <ranges> 
 
 ShelfShopView::ShelfShopView(sf::Font& font, Player& player, GameManager& gm)
     : font(font), playerData(player), gameManager(&gm), selectedIndex(0) {
@@ -57,11 +60,7 @@ void ShelfShopView::handleInput(sf::Keyboard::Key key) {
         const std::string& selectedId = std::get<0>(decorations[selectedIndex]);
         int price = std::get<2>(decorations[selectedIndex]);
 
-        bool alreadyOwned = std::find(
-            playerData.ownedDecorations.begin(),
-            playerData.ownedDecorations.end(),
-            selectedId
-        ) != playerData.ownedDecorations.end();
+        bool alreadyOwned = std::ranges::find(playerData.ownedDecorations, selectedId) != playerData.ownedDecorations.end();
 
         if (alreadyOwned) {
             std::cout << "Already owned: " << selectedId << "\n";
@@ -85,11 +84,7 @@ void ShelfShopView::updateOptionColors() {
     for (size_t i = 0; i < decorations.size(); ++i) {
         const auto& [id, label, price] = decorations[i];
 
-        bool owned = std::find(
-            playerData.ownedDecorations.begin(),
-            playerData.ownedDecorations.end(),
-            id
-        ) != playerData.ownedDecorations.end();
+        bool owned = std::ranges::find(playerData.ownedDecorations, id) != playerData.ownedDecorations.end();
 
         std::string display = label + " - " + std::to_string(price) + " coins";
         if (owned)

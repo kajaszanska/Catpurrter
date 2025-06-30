@@ -2,6 +2,8 @@
 #include "GameManager.h"
 
 #include <iostream>
+// Im implementing <ranges> to replace any use of std::find with std::ranges::find
+#include <ranges> 
 
 HatShopView::HatShopView(sf::Font& font, Player& player, GameManager& gm)
     : font(font), playerData(player), gameManager(gm)
@@ -46,11 +48,7 @@ void HatShopView::handleInput(sf::Keyboard::Key key) {
         const std::string& selectedId = std::get<0>(hats[selectedIndex]);
         int price = std::get<2>(hats[selectedIndex]);
 
-        bool alreadyOwned = std::find(
-            playerData.unlockedHats.begin(),
-            playerData.unlockedHats.end(),
-            selectedId
-        ) != playerData.unlockedHats.end();
+        bool alreadyOwned = std::ranges::find(playerData.unlockedHats, selectedId) != playerData.unlockedHats.end();
 
         if (alreadyOwned) {
             std::cout << "Already owned: " << selectedId << "\n";
@@ -75,11 +73,7 @@ void HatShopView::updateOptionColors() {
     for (size_t i = 0; i < hats.size(); ++i) {
         const auto& [id, label, price] = hats[i];
 
-        bool owned = std::find(
-            playerData.unlockedHats.begin(),
-            playerData.unlockedHats.end(),
-            id
-        ) != playerData.unlockedHats.end();
+        bool owned = std::ranges::find(playerData.unlockedHats, id) != playerData.unlockedHats.end();
 
         std::string display = label + " - " + std::to_string(price) + " coins";
         if (owned)

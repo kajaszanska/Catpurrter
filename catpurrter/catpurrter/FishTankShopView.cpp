@@ -3,6 +3,8 @@
 
 #include <algorithm>
 #include <iostream>
+// Im implementing <ranges> to replace any use of std::find with std::ranges::find
+#include <ranges> 
 
 FishTankShopView::FishTankShopView(sf::Font& font, Player& player, GameManager& gm)
     : font(font), playerData(player), gameManager(gm) {
@@ -62,11 +64,7 @@ void FishTankShopView::handleInput(sf::Keyboard::Key key) {
         const std::string& selectedId = std::get<0>(items[selectedIndex]);
         int price = std::get<2>(items[selectedIndex]);
 
-        bool alreadyOwned = std::find(
-            playerData.aquariumContents.begin(),
-            playerData.aquariumContents.end(),
-            selectedId
-        ) != playerData.aquariumContents.end();
+        bool alreadyOwned = std::ranges::find(playerData.aquariumContents, selectedId) != playerData.aquariumContents.end();
 
         if (alreadyOwned) {
             std::cout << "Already owned: " << selectedId << "\n";
@@ -93,11 +91,7 @@ void FishTankShopView::handleInput(sf::Keyboard::Key key) {
 void FishTankShopView::updateOptionColors() {
     for (size_t i = 0; i < items.size(); ++i) {
         const auto& [id, label, price] = items[i];
-        bool owned = std::find(
-            playerData.aquariumContents.begin(),
-            playerData.aquariumContents.end(),
-            id
-        ) != playerData.aquariumContents.end();
+        bool owned = std::ranges::find(playerData.aquariumContents, id) != playerData.aquariumContents.end();
 
         std::string display = label + " - " + std::to_string(price) + " coins";
         if (owned) display += " (Owned)";

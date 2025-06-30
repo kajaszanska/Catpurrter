@@ -1,7 +1,10 @@
 #include "MiniGameShopView.h"
 #include "GameManager.h"
+
 #include <iostream>
 #include <algorithm>
+// Im implementing <ranges> to replace any use of std::find with std::ranges::find
+#include <ranges> 
 
 MiniGameShopView::MiniGameShopView(sf::Font& font, Player& player, GameManager& gm)
     : font(font), playerData(player), gameManager(gm), selectedIndex(0) {
@@ -34,8 +37,7 @@ void MiniGameShopView::init() {
 void MiniGameShopView::updateOptionColors() {
     for (size_t i = 0; i < games.size(); ++i) {
         const auto& [id, name, price] = games[i];
-        bool owned = std::find(playerData.ownedMiniGames.begin(), playerData.ownedMiniGames.end(), id)
-            != playerData.ownedMiniGames.end();
+        bool owned = std::ranges::find(playerData.ownedMiniGames, id) != playerData.ownedMiniGames.end();
 
         std::string label = name + " - " + std::to_string(price) + " coins";
         if (owned) label += " (Owned)";
@@ -60,8 +62,7 @@ void MiniGameShopView::handleInput(sf::Keyboard::Key key) {
     else if (key == sf::Keyboard::Enter) {
         const auto& [id, label, price] = games[selectedIndex];
 
-        bool owned = std::find(playerData.ownedMiniGames.begin(),
-            playerData.ownedMiniGames.end(), id) != playerData.ownedMiniGames.end();
+        bool owned = std::ranges::find(playerData.ownedMiniGames, id) != playerData.ownedMiniGames.end();
 
         if (owned) {
             std::cout << "Already owned: " << id << "\n";
