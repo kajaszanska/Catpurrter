@@ -26,6 +26,9 @@ public:
     void resetCloseFlag();
     ShopSelection getSelectedOption() const;
 
+    void setSelectionIndex(int idx) { selectionIndex = idx; }
+
+
 private:
     const sf::Font& font;
     std::vector<sf::Text> options;

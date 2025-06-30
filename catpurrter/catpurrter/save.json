@@ -1,25 +1,20 @@
 {
     "aquariumContents": [
-        "castle",
-        "plant",
         "fish1",
-        "fish3",
-        "fish2"
+        "plant"
     ],
-    "coins": 9155,
+    "coins": 9555,
     "equippedHat": "",
     "ownedDecorations": [
         "car",
-        "plant",
-        "books",
-        "picture"
+        "plant"
     ],
-    "ownedMiniGames": [],
+    "ownedMiniGames": [
+        "snake"
+    ],
     "shelfContents": [],
     "unlockedHats": [
-        "frog",
         "pirate",
-        "crown",
         "wizard"
     ]
 }

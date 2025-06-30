@@ -24,19 +24,25 @@ void Shelf::init() {
     {400.f, 255.f}   // Position for fourth item (right, bottom shelf)
 };
 
-    int idx = 0;
-    for (const std::string& decoId : playerData.ownedDecorations) {
-        std::string path = "assets/graphics/shelves/" + decoId + "big.png";
-        sf::Texture tex;
-        if (tex.loadFromFile(path)) {
-            bigDecorationTextures[decoId] = tex;
-            sf::Sprite spr(bigDecorationTextures[decoId]);
-            if (idx < shelfPositions.size())
-                spr.setPosition(shelfPositions[idx]);
-            bigDecorationSprites.push_back(spr);
-        }
-        ++idx;
-    }
+ int idx = 0;
+ for (const std::string& decoId : playerData.ownedDecorations) {
+     std::string path = "assets/graphics/shelves/" + decoId + "big.png";
+     sf::Texture tex;
+     if (tex.loadFromFile(path)) {
+         bigDecorationTextures[decoId] = tex;
+         sf::Sprite spr(bigDecorationTextures[decoId]);
+         if (idx < shelfPositions.size()) {
+             spr.setPosition(shelfPositions[idx]);
+         }
+         else {
+             // If too many items, stack extras at last position or offset as you wish
+             spr.setPosition(shelfPositions.back());
+         }
+         bigDecorationSprites.push_back(spr);
+     }
+     ++idx;
+ }
+
 
     selectionIndex = 0;
 }

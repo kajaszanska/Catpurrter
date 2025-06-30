@@ -103,6 +103,12 @@ void ShelfShopView::updateOptionColors() {
 }
 
 void ShelfShopView::render(sf::RenderWindow& window) {
+    // Fill background with purple
+    sf::RectangleShape bg(sf::Vector2f(static_cast<float>(window.getSize().x), static_cast<float>(window.getSize().y)));
+
+    bg.setFillColor(sf::Color(120, 60, 200)); // Pick your favorite purple
+    window.draw(bg);
+
     gameManager->drawSectionTitle(window, font, "Shelf Shop");
     gameManager->drawCoinDisplay(window, font, playerData.coins);
 

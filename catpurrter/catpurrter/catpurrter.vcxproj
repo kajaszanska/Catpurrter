@@ -154,6 +154,7 @@
     <ClCompile Include="Shelf.cpp" />
     <ClCompile Include="ShelfShopView.cpp" />
     <ClCompile Include="ShopCategory.cpp" />
+    <ClCompile Include="SnakeGame.cpp" />
     <ClCompile Include="StorageRack.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -168,6 +169,7 @@
     <ClInclude Include="Shelf.h" />
     <ClInclude Include="ShelfShopView.h" />
     <ClInclude Include="ShopCategory.h" />
+    <ClInclude Include="SnakeGame.h" />
     <ClInclude Include="StorageRack.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

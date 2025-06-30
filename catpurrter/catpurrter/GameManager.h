@@ -32,9 +32,12 @@ enum class GameState {
     MiniGame
 };
 
+class SnakeGame;
 
 class GameManager {
 public:
+
+    void update(float dt);
     GameManager();
     void run();
 
@@ -54,9 +57,9 @@ private:
     std::vector<sf::Text> menuItems;
     int selectedIndex;
 
-    
+    sf::Texture startMenuBgTexture;
+    sf::Sprite startMenuBgSprite;
 
-    GameState currentState;
 
     GameState state;
     Player playerData;
@@ -66,12 +69,18 @@ private:
 
 
     void processEvents();
-    void update(float dt);
+   
     void render();
 
     void renderStartMenu();
 
     void updateStartMenu();
+
+    bool showingNewGameConfirm = false;
+    int confirmIndex = 0; // 0 = Yes, 1 = No
+
+    SnakeGame* snakeGame = nullptr;
+
 
     void loadFont();
     void initMenu();

@@ -48,9 +48,7 @@ void StorageRack::init() {
 
 
 void StorageRack::update() {
-    for (size_t i = 0; i < hatOptions.size(); ++i) {
-        hatOptions[i].setFillColor(i == selectionIndex ? sf::Color::Yellow : sf::Color::White);
-    }
+   
 }
 
 void StorageRack::render(sf::RenderWindow& window) {
@@ -108,24 +106,32 @@ void StorageRack::render(sf::RenderWindow& window) {
 
 
 void StorageRack::handleInput(sf::Keyboard::Key key) {
-    size_t hatsCount = playerData.unlockedHats.size();
-    if (hatsCount == 0) return;
+    std::cout << "[StorageRack::handleInput] Got key: " << key << std::endl;
 
-    // --- ESCAPE HANDLING ---
+
+
     if (key == sf::Keyboard::Escape) {
+        std::cout << "[StorageRack] ESC pressed!\n";
         closeRequested = true;
         return;
     }
 
 
+    size_t hatsCount = playerData.unlockedHats.size();
+    if (hatsCount == 0) return;
+
+
+
+
 
     int cols = 2; // How many columns in your grid?
-    int rows = (hatsCount + 1) / 2;
+ 
 
     // Left/Right navigation
-    if ((key == sf::Keyboard::Right || key == sf::Keyboard::D) && selectionIndex + 1 < hatsCount) {
+    if ((key == sf::Keyboard::Right || key == sf::Keyboard::D) && selectionIndex + 1 < static_cast<int>(hatsCount)) {
         selectionIndex++;
     }
+
     else if ((key == sf::Keyboard::Left || key == sf::Keyboard::A) && selectionIndex > 0) {
         selectionIndex--;
     }
@@ -133,13 +139,13 @@ void StorageRack::handleInput(sf::Keyboard::Key key) {
     else if ((key == sf::Keyboard::Up || key == sf::Keyboard::W) && selectionIndex - cols >= 0) {
         selectionIndex -= cols;
     }
-    else if ((key == sf::Keyboard::Down || key == sf::Keyboard::S) && selectionIndex + cols < hatsCount) {
-        selectionIndex += cols;
+    else if ((key == sf::Keyboard::Down || key == sf::Keyboard::S) && selectionIndex + static_cast<int>(cols) < static_cast<int>(hatsCount)) {
+        selectionIndex += static_cast<int>(cols);
     }
 
     // Enter to equip
     if (key == sf::Keyboard::Enter || key == sf::Keyboard::Space) {
-        if (selectionIndex < hatsCount) {
+        if (selectionIndex < static_cast<int>(hatsCount)) {
             std::string selectedHat = playerData.unlockedHats[selectionIndex];
             if (playerData.equippedHat == selectedHat) {
                 // Unwear hat

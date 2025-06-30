@@ -42,6 +42,12 @@ void Room::init() {
     }
     backgroundSprite.setTexture(backgroundTexture);
 
+    if (!indicatorTexture.loadFromFile("assets/graphics/indicator.png")) {
+        std::cout << "Failed to load indicator icon!\n";
+    }
+    indicatorSprite.setTexture(indicatorTexture);
+
+
     // --- Player starting position ---
     playerPos = { 100, 300 };
     playerRect.setSize({ 40, 60 });
@@ -159,6 +165,36 @@ void Room::init() {
 
 }
 
+void Room::refreshAquariumVisuals() {
+    // --- Setup fish visuals based on bought fish ---
+    fishes.clear();
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::vector<std::string> fishIds = { "fish1", "fish2", "fish3" };
+    std::uniform_real_distribution<float> xDist(
+        ROOM_AQUARIUM_LEFT + FISH_ROOM_WIDTH / 2,
+        ROOM_AQUARIUM_RIGHT - FISH_ROOM_WIDTH / 2
+    );
+    std::uniform_real_distribution<float> yDist(
+        ROOM_AQUARIUM_TOP + FISH_ROOM_HEIGHT / 2,
+        ROOM_AQUARIUM_BOTTOM - FISH_ROOM_HEIGHT / 2
+    );
+    std::uniform_real_distribution<float> vxDist(0.2f, 0.8f);
+
+    for (const auto& id : fishIds) {
+        if (std::find(playerData.aquariumContents.begin(), playerData.aquariumContents.end(), id) != playerData.aquariumContents.end()) {
+            FishVisual fish;
+            fish.id = id;
+            fish.facingRight = (gen() % 2 == 0);
+            fish.position = sf::Vector2f(xDist(gen), yDist(gen));
+            float vx = vxDist(gen) * (fish.facingRight ? 1.f : -1.f);
+            fish.velocity = { vx, 0.f };
+            fish.minSwimDistance = 25.f + (gen() % 20);
+            fish.directionTimer = 0.7f + float(gen() % 200) / 100.0f;
+            fishes.push_back(fish);
+        }
+    }
+}
 
 
 void Room::handleInput(sf::Keyboard::Key key) {
@@ -239,8 +275,8 @@ void Room::update() {
         float fishWidth = 33.f, fishHeight = 21.f; // fallback
         auto it = fishTextures.find(texKey);
         if (it != fishTextures.end()) {
-            fishWidth = it->second.getSize().x;
-            fishHeight = it->second.getSize().y;
+            fishWidth = static_cast<float>(it->second.getSize().x);
+            fishHeight = static_cast<float>(it->second.getSize().y);
         }
 
         // --- Move fish ---
@@ -320,11 +356,6 @@ void Room::render(sf::RenderWindow& window) {
     for (size_t i = 0; i < objects.size(); ++i) {
         if (i == Room::STORAGE_RACK || i == Room::AQUARIUM) continue;
         window.draw(objects[i].rect);
-
-        sf::Text label(objects[i].name, font, 18);
-        label.setFillColor(sf::Color::White);
-        label.setPosition(objects[i].rect.getPosition().x, objects[i].rect.getPosition().y - 22);
-        window.draw(label);
     }
 
     // 2. Draw shelf decorations
@@ -522,15 +553,15 @@ void Room::render(sf::RenderWindow& window) {
         sf::Vector2f objPos = obj->rect.getPosition();
         sf::Vector2f objSize = obj->rect.getSize();
 
-        sf::RectangleShape interactSquare({ 30.f, 30.f });
-        interactSquare.setPosition(
-            objPos.x + objSize.x / 2.f - 15.f,
-            objPos.y - 50.f
+       
+        indicatorSprite.setScale(50.f / indicatorTexture.getSize().x, 50.f / indicatorTexture.getSize().y); // scale to 50x50
+        indicatorSprite.setPosition(
+            objPos.x + objSize.x / 2.f - 25.f, // center horizontally (50/2 = 25)
+            objPos.y - 55.f                    // slightly above, adjust as needed
         );
-        interactSquare.setFillColor(sf::Color(255, 255, 0, 128));
-        interactSquare.setOutlineColor(sf::Color::Black);
-        interactSquare.setOutlineThickness(2.f);
-        window.draw(interactSquare);
+        window.draw(indicatorSprite);
+
+
     }
 }
 
@@ -568,8 +599,8 @@ void Room::movePlayer(int dx, int dy) {
     float minFeetY = 390.f, maxFeetY = 600.f;
 
     // Adjust collision box for feet area
-    const float playerSpriteWidth = playerSprite.getTexture()->getSize().x;
-    const float playerSpriteHeight = playerSprite.getTexture()->getSize().y;
+    const float playerSpriteWidth = static_cast<float>(playerSprite.getTexture()->getSize().x);
+    const float playerSpriteHeight = static_cast<float>(playerSprite.getTexture()->getSize().y);
     const float COLLISION_FEET_TOP = 110.f;
     const float COLLISION_FEET_LEFT = 35.f;
     const float COLLISION_FEET_WIDTH = 80.f;

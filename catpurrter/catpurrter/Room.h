@@ -17,6 +17,8 @@ public:
         std::shared_ptr<sf::Texture> texture; 
     };
 
+    void refreshAquariumVisuals();
+
     void movePlayer(int dx, int dy);
 
     void init();
@@ -75,7 +77,9 @@ private:
     sf::Vector2f playerPos;
     float playerSpeed = 0.20f;
 
-   
+    sf::Texture indicatorTexture;
+    sf::Sprite indicatorSprite;
+
 
     std::vector<RoomObject> objects;
     int highlightedIndex = -1;

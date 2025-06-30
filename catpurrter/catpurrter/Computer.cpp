@@ -1,98 +1,117 @@
 #include "Computer.h"
 #include <iostream>
+#include <cmath>
 
 Computer::Computer(sf::Font& fontRef, Player& playerRef)
     : font(fontRef), playerData(playerRef) {
 }
 
-
 void Computer::init() {
-    options.clear();
-    selectionIndex = 0;
+    if (!desktopBgTexture.loadFromFile("assets/graphics/desktop.png")) {
+        std::cout << "Failed to load desktop background!\n";
+    }
+    desktopBgSprite.setTexture(desktopBgTexture);
+    icons.clear();
+    selectedIndex = 0;
     selected = ComputerSelection::None;
     closeRequested = false;
 
-   
-    options.push_back(sf::Text("Shop", font, 32));
+    // Shop icon
+    DesktopIcon shopIcon;
+    shopIcon.id = "shop";
+    shopIcon.label = "Shop";
+    shopIcon.rect.setSize({ 70.f, 70.f });
+    shopIcon.rect.setFillColor(sf::Color(100, 100, 255));
+    icons.push_back(shopIcon);
 
-    // Dynamically add mini games
-    for (const auto& game : playerData.ownedMiniGames) {
-        options.emplace_back(sf::Text(game, font, 32));
+    // Add mini game icons
+    for (const auto& mg : playerData.ownedMiniGames) {
+        DesktopIcon icon;
+        icon.id = mg;
+        // Show pretty label for known games, or just ID
+        if (mg == "snake") icon.label = "Snake";
+        else if (mg == "tetris") icon.label = "Tetris";
+        else if (mg == "pong") icon.label = "Pong";
+        else icon.label = mg;
+        icon.rect.setSize({ 70.f, 70.f });
+        icon.rect.setFillColor(sf::Color(120, 180, 120));
+        icons.push_back(icon);
     }
 
-    options.push_back(sf::Text("Back", font, 32));
-
-    float y = 200.f;
-    for (auto& text : options) {
-        text.setFillColor(sf::Color::White);
-        text.setPosition(100.f, y);
-        y += 60.f;
-    }
+ 
+    // Always start on first icon
+    selectedIndex = 0;
 }
 
-
 void Computer::update() {
-    for (size_t i = 0; i < options.size(); ++i) {
-        options[i].setFillColor(i == selectionIndex ? sf::Color::Yellow : sf::Color::White);
-    }
+    // nothing needed for highlight (handled in render)
 }
 
 void Computer::render(sf::RenderWindow& window) {
-    sf::Text title("Computer", font, 36);
-    title.setFillColor(sf::Color::Cyan);
-    title.setPosition(100.f, 50.f);
-    window.draw(title);
+    window.draw(desktopBgSprite);
 
-    for (const auto& opt : options)
-        window.draw(opt);
+    // Draw icons in grid
+    float startX = 120.f, startY = 120.f;
+    float gapX = 120.f, gapY = 110.f;
+    int perRow = iconsPerRow;
+    for (size_t i = 0; i < icons.size(); ++i) {
+        int row = i / perRow;
+        int col = i % perRow;
 
-    /* Draw owned mini games
-    float y = 150.f;
-    for (const auto& game : playerData.ownedMiniGames) {
-        sf::Text gameText;
-        gameText.setFont(font);
-        gameText.setCharacterSize(24);
-        gameText.setPosition(100.f, y);
-        gameText.setString(game.c_str());
-        gameText.setFillColor(sf::Color::White);
-        window.draw(gameText);
-        y += 30.f;
+        float x = startX + col * gapX;
+        float y = startY + row * gapY;
+
+        // Rectangle (icon)
+        auto rect = icons[i].rect;
+        rect.setPosition(x, y);
+        rect.setOutlineColor(i == selectedIndex ? sf::Color::Yellow : sf::Color(40, 40, 40));
+        rect.setOutlineThickness(i == selectedIndex ? 4.f : 2.f);
+        window.draw(rect);
+
+        // Label below
+        sf::Text label(icons[i].label, font, 24);
+        label.setFillColor(sf::Color::White);
+        sf::FloatRect bounds = label.getLocalBounds();
+        label.setOrigin(bounds.width / 2.f, 0);
+        label.setPosition(x + 35.f, y + 75.f); // center under square
+        window.draw(label);
     }
-    */
 }
 
-
-
-
 void Computer::handleInput(sf::Keyboard::Key key) {
+    int perRow = iconsPerRow;
+    int iconCount = static_cast<int>(icons.size());
+    int row = selectedIndex / perRow;
+    int col = selectedIndex % perRow;
+
     if (key == sf::Keyboard::Escape) {
         closeRequested = true;
         return;
     }
-
-    if (key == sf::Keyboard::Up || key == sf::Keyboard::W) {
-        if (selectionIndex > 0) selectionIndex--;
+    if (key == sf::Keyboard::Left || key == sf::Keyboard::A) {
+        if (col > 0) selectedIndex--;
+    }
+    else if (key == sf::Keyboard::Right || key == sf::Keyboard::D) {
+        if (col < perRow - 1 && selectedIndex + 1 < iconCount) selectedIndex++;
+    }
+    else if (key == sf::Keyboard::Up || key == sf::Keyboard::W) {
+        if (row > 0) selectedIndex -= perRow;
     }
     else if (key == sf::Keyboard::Down || key == sf::Keyboard::S) {
-        if (selectionIndex < static_cast<int>(options.size()) - 1) selectionIndex++;
+        if (selectedIndex + perRow < iconCount) selectedIndex += perRow;
     }
     else if (key == sf::Keyboard::Enter) {
-        if (selectionIndex == 0) {
+        const std::string& id = icons[selectedIndex].id;
+        if (id == "shop") {
             selected = ComputerSelection::Shop;
         }
-        else if (selectionIndex == static_cast<int>(options.size()) - 1) {
-            closeRequested = true;
-        }
-        else {
-            selectedMiniGame = playerData.ownedMiniGames[selectionIndex - 1];
-            std::cout << "Selected mini game: " << selectedMiniGame << "\n";
+             else {
+            selectedMiniGame = id;
             selected = ComputerSelection::MiniGame;
-         
+            std::cout << "Selected mini game: " << selectedMiniGame << "\n";
         }
     }
 }
-
-
 
 bool Computer::shouldClose() const {
     return closeRequested;
@@ -105,3 +124,6 @@ void Computer::resetCloseFlag() {
 ComputerSelection Computer::getSelectedOption() const {
     return selected;
 }
+
+const std::string& Computer::getSelectedMiniGame() const { return selectedMiniGame; }
+void Computer::clearSelectedMiniGame() { selectedMiniGame.clear(); }

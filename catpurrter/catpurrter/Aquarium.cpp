@@ -77,8 +77,9 @@ void Aquarium::update(float dt) {
         auto it = fishTextures.find(texKey);
         float fishWidth = 100.f, fishHeight = 64.f;
         if (it != fishTextures.end()) {
-            fishWidth = it->second.getSize().x;
-            fishHeight = it->second.getSize().y;
+            fishWidth = static_cast<float>(it->second.getSize().x);
+            fishHeight = static_cast<float>(it->second.getSize().y);
+
         }
 
         // Move the fish (dt already makes it frame-independent!)

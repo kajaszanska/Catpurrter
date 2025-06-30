@@ -33,6 +33,11 @@ void FishTankShopView::init() {
 }
 
 void FishTankShopView::render(sf::RenderWindow& window) {
+    // Fill background with purple
+    sf::RectangleShape bg(sf::Vector2f(static_cast<float>(window.getSize().x), static_cast<float>(window.getSize().y)));
+    bg.setFillColor(sf::Color(120, 60, 200)); // Pick your favorite purple
+    window.draw(bg);
+
     gameManager.drawSectionTitle(window, font, "Fish Tank Shop");
     gameManager.drawCoinDisplay(window, font, playerData.coins);
     for (const auto& opt : itemTexts)
@@ -73,7 +78,8 @@ void FishTankShopView::handleInput(sf::Keyboard::Key key) {
             std::cout << "Bought: " << selectedId << "\n";
             updateOptionColors();
             if (gameManager.getRoomView())
-                gameManager.getRoomView()->init();
+                gameManager.getRoomView()->refreshAquariumVisuals();
+
 
         }
         else {

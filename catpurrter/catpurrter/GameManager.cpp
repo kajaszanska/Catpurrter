@@ -5,6 +5,8 @@
 #include "Shelf.h"
 #include "StorageRack.h"
 #include "Computer.h"
+#include "SnakeGame.h"
+
 
 
 
@@ -43,6 +45,11 @@ void GameManager::loadFont() {
 }
 
 void GameManager::initMenu() {
+    if (!startMenuBgTexture.loadFromFile("assets/graphics/start.png")) {
+        std::cout << "Failed to load start menu background!\n";
+    }
+    startMenuBgSprite.setTexture(startMenuBgTexture);
+
     std::vector<std::string> options = { "New Game", "Load Game", "Exit" };
 
     for (size_t i = 0; i < options.size(); ++i) {
@@ -51,7 +58,8 @@ void GameManager::initMenu() {
         text.setString(options[i]);
         text.setCharacterSize(40);
         text.setPosition(300.f, 200.f + i * 60.f);
-        text.setFillColor(i == selectedIndex ? sf::Color::Yellow : sf::Color::White);
+     
+        text.setFillColor(i == selectedIndex ? sf::Color(200, 170, 40) : sf::Color(120, 60, 255));
         menuItems.push_back(text);
     }
 }
@@ -62,7 +70,7 @@ void GameManager::processEvents() {
         if (event.type == sf::Event::Closed)
             window.close();
 
-   
+
         if (event.type == sf::Event::KeyPressed)
             keyState[event.key.code] = true;
         if (event.type == sf::Event::KeyReleased)
@@ -71,6 +79,38 @@ void GameManager::processEvents() {
         if (event.type == sf::Event::KeyPressed) {
             switch (state) {
             case GameState::StartMenu:
+                if (showingNewGameConfirm) {
+                    // Confirmation popup input
+                    if ((event.key.code == sf::Keyboard::A || event.key.code == sf::Keyboard::Left) && confirmIndex > 0)
+                        confirmIndex--;
+                    else if ((event.key.code == sf::Keyboard::D || event.key.code == sf::Keyboard::Right) && confirmIndex < 1)
+                        confirmIndex++;
+                    else if (event.key.code == sf::Keyboard::Enter) {
+                        if (confirmIndex == 0) {
+                            // YES selected: perform new game logic here!
+                            std::cout << "Starting new game - confirmed!\n";
+                            playerData = Player();
+                            playerData.coins = 10000;
+                            playerData.equippedHat = "none";
+                            playerData.unlockedHats = {}; // default hats
+                            playerData.saveToFile("save.json");
+
+                            if (roomView) delete roomView;
+                            roomView = new Room(font, playerData);
+                            roomView->init();
+
+                            state = GameState::RoomView;
+                        }
+                        // In both cases, hide popup
+                        showingNewGameConfirm = false;
+                    }
+                    else if (event.key.code == sf::Keyboard::Escape) {
+                        showingNewGameConfirm = false;
+                    }
+                    return; // eat keypresses if popup is open
+                }
+
+                // If popup not showing, handle normal menu input
                 if (event.key.code == sf::Keyboard::Up || event.key.code == sf::Keyboard::W)
                     moveUp();
                 if (event.key.code == sf::Keyboard::Down || event.key.code == sf::Keyboard::S)
@@ -78,6 +118,7 @@ void GameManager::processEvents() {
                 if (event.key.code == sf::Keyboard::Enter)
                     selectOption();
                 break;
+
 
             case GameState::RoomView:
                 if (roomView) {
@@ -126,7 +167,7 @@ void GameManager::processEvents() {
                 }
                 break;
 
-              
+
             case GameState::ComputerView:
                 if (event.type == sf::Event::KeyPressed) {
                     computerView->handleInput(event.key.code);
@@ -155,24 +196,32 @@ void GameManager::processEvents() {
                         const std::string& selectedGame = computerView->getSelectedMiniGame();
                         if (!selectedGame.empty()) {
                             std::cout << "Mini Game selected: " << selectedGame << "\n";
-                            initMiniGame();
-                            state = GameState::MiniGame;
-                        }
+                            if (selectedGame == "snake") {
+                                if (snakeGame) delete snakeGame;
+                                snakeGame = new SnakeGame(font, playerData, *this);
+                                snakeGame->init();
+                                state = GameState::MiniGame;
+                            }
 
-                        computerView->clearSelectedMiniGame();
+                            computerView->clearSelectedMiniGame();
+                        }
                     }
-                }
-                break;
+                    break;
 
 
 
             case GameState::StorageView:
+                std::cout << "In StorageView state\n";
                 if (storageRackView)
                     storageRackView->handleInput(event.key.code);
 
                 if (storageRackView && storageRackView->shouldClose()) {
+                    std::cout << "Detected close request in StorageRack\n";
                     storageRackView->resetCloseFlag();
+                    delete storageRackView;
+                    storageRackView = nullptr;
                     state = GameState::RoomView;
+                    std::cout << "Switched to RoomView\n";
                 }
                 break;
 
@@ -221,7 +270,7 @@ void GameManager::processEvents() {
                             std::cout << "Hat Shop selected\n";
                             if (hatShopView) delete hatShopView;
                             hatShopView = new HatShopView(font, playerData, *this);
-                            hatShopView->init(); 
+                            hatShopView->init();
                             state = GameState::HatShop;
                             break;
 
@@ -303,20 +352,31 @@ void GameManager::processEvents() {
                     delete miniGameShopView;
                     miniGameShopView = nullptr;
 
+                    // Always refresh desktop icons after buying a minigame
                     if (computerView) delete computerView;
                     computerView = new Computer(font, playerData);
                     computerView->init();
 
-                    state = GameState::ComputerView;
+                    // Go to shop categories, not computer desktop
+                    if (shopCategoryView) delete shopCategoryView;
+                    shopCategoryView = new ShopCategoryView(font);
+                    shopCategoryView->init();
+
+                    // Highlight MiniGameShop (which is index 3 in your list)
+                    shopCategoryView->setSelectionIndex(3);
+
+                    state = GameState::ShopCategoryView;
                 }
+
+
                 break;
 
 
+                }
             }
         }
     }
 }
-
 
 void GameManager::update(float dt) {
     switch (state) {
@@ -344,10 +404,17 @@ void GameManager::update(float dt) {
     case GameState::FishTankShop:
         if (fishTankShopView) fishTankShopView->update();
         break;
+    case GameState::MiniGame:
+        if (snakeGame)
+            snakeGame->update(dt);
+        if (snakeGame && snakeGame->shouldClose()) {
+            delete snakeGame;
+            snakeGame = nullptr;
+            state = GameState::ComputerView;
+        }
+        break;
     }
 }
-
-
 
 
 void GameManager::render() {
@@ -389,8 +456,10 @@ void GameManager::render() {
         if (hatShopView) hatShopView->render(window);
         break;
     case GameState::MiniGame:
-        renderMiniGame();
+        if (snakeGame)
+            snakeGame->render(window);
         break;
+
     }
 
     window.display();
@@ -419,19 +488,11 @@ void GameManager::selectOption() {
 
     switch (selectedIndex) {
     case 0: // New Game
-        std::cout << "New Game Selected\n";
-        playerData = Player(); // Reset all values
-        playerData.coins = 10000;
-        playerData.equippedHat = "none";
-        playerData.unlockedHats = {}; // default hats
-        playerData.saveToFile("save.json");
-
-        if (roomView) delete roomView;
-        roomView = new Room(font, playerData);
-        roomView->init();
-
-        state = GameState::RoomView;
+        std::cout << "New Game Selected - confirmation required\n";
+        showingNewGameConfirm = true;
+        confirmIndex = 0;
         break;
+
 
     case 1: // Load Game
         std::cout << "Load Game Selected\n";
@@ -458,20 +519,59 @@ void GameManager::selectOption() {
 
 
 void GameManager::renderStartMenu() {
+    window.draw(startMenuBgSprite); // Background first
     for (const auto& item : menuItems) {
         window.draw(item);
     }
+    // Draw confirmation popup if needed
+    if (showingNewGameConfirm) {
+        // Draw white box
+        sf::RectangleShape popup(sf::Vector2f(540, 170));
+        popup.setFillColor(sf::Color::White);
+        popup.setOutlineThickness(4.f);
+        popup.setOutlineColor(sf::Color(120, 60, 255));
+        popup.setPosition(130, 180);
+        window.draw(popup);
+
+        // Draw purple question text
+        sf::Text question("Are you sure you want to run new game?\nPrevious save will be deleted", font, 26);
+        question.setFillColor(sf::Color(120, 60, 255));
+        question.setPosition(150, 200);
+        window.draw(question);
+
+        // Draw Yes / No options
+        sf::Text yesText("Yes", font, 32);
+        sf::Text noText("No", font, 32);
+
+        sf::Color purple(120, 60, 255);
+        sf::Color yellow(200, 170, 40);
+
+        yesText.setFillColor(confirmIndex == 0 ? yellow : purple);
+        noText.setFillColor(confirmIndex == 1 ? yellow : purple);
+
+        yesText.setPosition(250, 300);
+        noText.setPosition(450, 300);
+
+        window.draw(yesText);
+        window.draw(noText);
+    }
+
 }
+
 
 
 
 void GameManager::updateStartMenu() {
-    if (menuItems.empty()) return; 
+    if (menuItems.empty()) return;
 
     for (size_t i = 0; i < menuItems.size(); ++i) {
-        menuItems[i].setFillColor(i == selectedIndex ? sf::Color::Yellow : sf::Color::White);
+    
+        menuItems[i].setFillColor(
+            i == selectedIndex ? sf::Color(200, 170, 40) : sf::Color(120, 60, 255)
+        );
     }
 }
+
 
 
 
@@ -537,9 +637,10 @@ void GameManager::handleContinuousMovement() {
     }
 }
 
-void GameManager::setState(GameState state) {
-    currentState = state;
+void GameManager::setState(GameState s) {
+    state = s;
 }
+
 GameState GameManager::getState() const {
-    return currentState;
+    return state;
 }

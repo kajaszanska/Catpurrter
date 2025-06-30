@@ -45,6 +45,13 @@ void ShopCategoryView::clearSelection() {
 
 void ShopCategoryView::render(sf::RenderWindow& window) {
 
+    // Fill background with purple
+    sf::RectangleShape bg(sf::Vector2f(static_cast<float>(window.getSize().x),static_cast<float>(window.getSize().y)));
+
+    bg.setFillColor(sf::Color(120, 60, 200)); // Pick your favorite purple
+    window.draw(bg);
+
+
     sf::Text title("Shop Categories", font, 36);
     title.setFillColor(sf::Color::Cyan);
     title.setPosition(100.f, 50.f);
