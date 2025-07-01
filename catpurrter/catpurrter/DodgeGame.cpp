@@ -163,12 +163,14 @@ void DodgeGame::handleInput(sf::Keyboard::Key key) {
     }
     else if (state == DodgeGameState::GameOver) {
         if (!coinsAdded) {
+            player.coins += coinsEarned;
             std::thread saveThread([&]() {
                 player.saveToFile("saves/save.json");
                 });
             saveThread.detach();
             coinsAdded = true;
         }
+
         if (key == sf::Keyboard::Left || key == sf::Keyboard::A) gameOverIndex = 0;
         else if (key == sf::Keyboard::Right || key == sf::Keyboard::D) gameOverIndex = 1;
         else if (key == sf::Keyboard::Enter) {

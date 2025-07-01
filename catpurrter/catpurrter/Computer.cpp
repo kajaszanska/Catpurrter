@@ -43,8 +43,8 @@ void Computer::update() {
 void Computer::render(sf::RenderWindow& window) {
     window.draw(desktopBgSprite);
 
-    float startX = 120.f, startY = 120.f;
-    float gapX = 120.f, gapY = 110.f;
+    float startX = 140.f, startY = 130.f;
+    float gapX = 145.f, gapY = 120.f;
     int perRow = iconsPerRow;
     for (size_t i = 0; i < icons.size(); ++i) {
         int row = i / perRow;

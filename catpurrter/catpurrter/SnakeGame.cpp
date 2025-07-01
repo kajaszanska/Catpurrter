@@ -161,6 +161,7 @@ void SnakeGame::handleInput(sf::Keyboard::Key key) {
     }
     else if (state == SnakeGameState::GameOver) {
         if (!coinsAdded) {
+            player.coins += coinsEarned; 
             std::thread saveThread([&]() {
                 player.saveToFile("saves/save.json");
                 });

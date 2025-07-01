@@ -24,7 +24,6 @@ void CatchGame::init() {
 
 void CatchGame::resetGame() {
     score = 0;
-    coinsEarned = 0;
     lives = 2;
     drops.clear();
     playerRect.setSize(sf::Vector2f(70, 25));
@@ -113,7 +112,9 @@ void CatchGame::update(float dt) {
 
     if (fallSpeed > 400.f) fallSpeed = 400.f;
 
+    if (score < 0) score = 0;
     if (lives < 0) {
+        coinsEarned = std::max(0, score);
         state = CatchGameState::GameOver;
     }
 }
@@ -123,7 +124,11 @@ void CatchGame::handleInput(sf::Keyboard::Key key) {
         if (key == sf::Keyboard::Up || key == sf::Keyboard::W) { if (menuIndex > 0) menuIndex--; }
         if (key == sf::Keyboard::Down || key == sf::Keyboard::S) { if (menuIndex < 2) menuIndex++; }
         if (key == sf::Keyboard::Enter) {
-            if (menuIndex == 0) { resetGame(); state = CatchGameState::Playing; }
+            if (menuIndex == 0) {
+                coinsEarned = 0;
+                resetGame();
+                state = CatchGameState::Playing;
+            }
             else if (menuIndex == 1) { state = CatchGameState::Instructions; }
             else if (menuIndex == 2) { closeRequested = true; }
         }
@@ -146,13 +151,14 @@ void CatchGame::handleInput(sf::Keyboard::Key key) {
     }
     else if (state == CatchGameState::GameOver) {
         if (!coinsAdded) {
-            coinsEarned = std::max(0, score);  
+            player.coins += coinsEarned;
             std::thread saveThread([&]() {
                 player.saveToFile("saves/save.json");
                 });
             saveThread.detach();
             coinsAdded = true;
         }
+
 
         if (key == sf::Keyboard::Left || key == sf::Keyboard::A) gameOverIndex = 0;
         else if (key == sf::Keyboard::Right || key == sf::Keyboard::D) gameOverIndex = 1;
