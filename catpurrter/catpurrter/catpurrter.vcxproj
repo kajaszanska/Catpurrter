@@ -167,12 +167,14 @@
     <ClInclude Include="FishTankShopView.h" />
     <ClInclude Include="GameManager.h" />
     <ClInclude Include="HatShopView.h" />
+    <ClInclude Include="MiniGameBase.h" />
     <ClInclude Include="MiniGameShopView.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Room.h" />
     <ClInclude Include="Shelf.h" />
     <ClInclude Include="ShelfShopView.h" />
     <ClInclude Include="ShopCategory.h" />
+    <ClInclude Include="ShopViewBase.h" />
     <ClInclude Include="SnakeGame.h" />
     <ClInclude Include="StorageRack.h" />
   </ItemGroup>

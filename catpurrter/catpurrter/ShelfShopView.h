@@ -1,39 +1,40 @@
-#ifndef SHELFSHOPVIEW_H
-#define SHELFSHOPVIEW_H
+#pragma once
 
-#include <SFML/Graphics.hpp>
+#include "ShopViewBase.h"
 #include <vector>
 #include <string>
-#include <utility>
-#include "Player.h"
+#include <tuple>
+#include <SFML/Graphics.hpp>
 
-class GameManager;
-
-
-class ShelfShopView {
+// ShelfShopView is a shop where the player can buy big decorations to display on their room shelf.
+// Handles displaying all available decorations, their prices, which ones are owned, purchasing, navigation, and shop UI.
+class ShelfShopView : public ShopViewBase {
 public:
-    ShelfShopView(sf::Font& font, Player& player, GameManager& gm);
+    // Constructs the Shelf Shop, using the game's font, player data, and main game manager.
+    ShelfShopView(sf::Font& font, Player& player, GameManager* gm);
 
-    void init();
-    void handleInput(sf::Keyboard::Key key);
-    void updateOptionColors();
-    void render(sf::RenderWindow& window);
+    // Initializes the shop (sets up available decorations and option display).
+    void init() override;
 
-    bool shouldClose() const;
-    void resetCloseFlag();
-   
+    // Handles keyboard input for up/down navigation, buying, and closing.
+    void handleInput(sf::Keyboard::Key key) override;
+
+    // Draws the shop background, menu, and all decoration options.
+    void render(sf::RenderWindow& window) override;
+
+    // Returns true if the player requested to close/exit the shop.
+    bool shouldClose() const override;
+
+    // Resets the close flag so the view can be reopened.
+    void resetCloseFlag() override;
 
 private:
-    sf::Font& font;
-    Player& playerData;
-    int selectedIndex = 0;
-    bool shouldExit = false;
-
+    // List of decorations for sale: tuple of (id, display name, price)
     std::vector<std::tuple<std::string, std::string, int>> decorations;
+
+    // Text for displaying each decoration option on screen
     std::vector<sf::Text> decorationOptions;
 
-    GameManager* gameManager;
-
+    // Updates option colors and ownership status.
+    void updateOptionColors() override;
 };
-
-#endif

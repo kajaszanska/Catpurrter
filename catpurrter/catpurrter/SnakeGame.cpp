@@ -452,6 +452,3 @@ void SnakeGame::drawGameOver(sf::RenderWindow& window) {
     right.setFillColor(gameOverIndex == 1 ? sf::Color(200, 170, 40) : sf::Color::White);
     window.draw(right);
 }
-
-
-

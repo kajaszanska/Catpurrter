@@ -1,35 +1,38 @@
 #pragma once
-#include <SFML/Graphics.hpp>
+#include "ShopViewBase.h"
 #include <vector>
 #include <tuple>
 #include <string>
-#include "Player.h"
 
-class GameManager;
-
-class FishTankShopView {
+// FishTankShopView is a shop where the player can buy fish and decorations for the aquarium.
+// Displays a list of items (fish, plants, castle), handles purchase logic, input, and visual updates.
+class FishTankShopView : public ShopViewBase {
 public:
-    FishTankShopView(sf::Font& font, Player& player, GameManager& gm);
-    void init();
-    void render(sf::RenderWindow& window);
-    void handleInput(sf::Keyboard::Key key);
-    bool shouldClose() const;
-    void resetCloseFlag();
-    void update();
+    // Constructs the Fish Tank Shop, using game's font, player data, and main game manager.
+    FishTankShopView(sf::Font& font, Player& player, GameManager* gm);
 
+    // Initializes shop state (sets up available items, their display, and option highlighting).
+    void init() override;
 
+    // Handles keyboard input for navigation (up/down), purchase (Enter), and closing (ESC).
+    void handleInput(sf::Keyboard::Key key) override;
+
+    // Draws the shop UI, item list, and highlights to the window.
+    void render(sf::RenderWindow& window) override;
+
+    // Returns true if the player requested to close the shop.
+    bool shouldClose() const override;
+
+    // Resets the close flag so the shop view can be reopened.
+    void resetCloseFlag() override;
 
 private:
-    sf::Font& font;
-    Player& playerData;
-    std::vector<std::tuple<std::string, std::string, int>> items; 
+    // List of items for sale: tuple of (id, display name, price)
+    std::vector<std::tuple<std::string, std::string, int>> items;
+
+    // Display texts for each shop item (to show on screen)
     std::vector<sf::Text> itemTexts;
-    int selectedIndex = 0;
-    bool closeRequested = false;
-    GameManager& gameManager;
-    std::vector<sf::Text> fishOptions;
 
-
-    void updateOptionColors();
-
+    // Updates text color and string to reflect selection and ownership status.
+    void updateOptionColors() override;
 };

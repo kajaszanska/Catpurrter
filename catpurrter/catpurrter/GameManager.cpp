@@ -116,6 +116,7 @@ void GameManager::processStartMenuEvents(const sf::Event& event) {
         else if (event.key.code == sf::Keyboard::Enter) {
             if (confirmIndex == 0) {
                 playerData = Player();
+                //values for new game
                 playerData.coins = 10000;
                 playerData.equippedHat = "none";
                 playerData.unlockedHats = {};
@@ -280,25 +281,25 @@ void GameManager::processShopCategoryViewEvents(const sf::Event& event) {
             switch (selected) {
             case ShopSelection::HatShop:
                 if (hatShopView) delete hatShopView;
-                hatShopView = new HatShopView(font, playerData, *this);
+                hatShopView = new HatShopView(font, playerData, this);
                 hatShopView->init();
                 state = GameState::HatShop;
                 break;
             case ShopSelection::FishTankShop:
                 if (fishTankShopView) delete fishTankShopView;
-                fishTankShopView = new FishTankShopView(font, playerData, *this);
+                fishTankShopView = new FishTankShopView(font, playerData, this);
                 fishTankShopView->init();
                 state = GameState::FishTankShop;
                 break;
             case ShopSelection::ShelfShop:
                 if (shelfShopView) delete shelfShopView;
-                shelfShopView = new ShelfShopView(font, playerData, *this);
+                shelfShopView = new ShelfShopView(font, playerData, this);
                 shelfShopView->init();
                 state = GameState::ShelfShop;
                 break;
             case ShopSelection::MiniGameShop:
                 if (miniGameShopView) delete miniGameShopView;
-                miniGameShopView = new MiniGameShopView(font, playerData, *this);
+                miniGameShopView = new MiniGameShopView(font, playerData, this);
                 miniGameShopView->init();
                 state = GameState::MiniGameShop;
                 break;
@@ -381,9 +382,6 @@ void GameManager::update(float dt) {
         break;
     case GameState::ShopCategoryView:
         if (shopCategoryView) shopCategoryView->update();
-        break;
-    case GameState::FishTankShop:
-        if (fishTankShopView) fishTankShopView->update();
         break;
     case GameState::MiniGame:
         if (snakeGame)

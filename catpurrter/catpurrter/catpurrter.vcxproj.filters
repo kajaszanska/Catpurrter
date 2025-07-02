@@ -110,5 +110,11 @@
     <ClInclude Include="DodgeGame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ShopViewBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MiniGameBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

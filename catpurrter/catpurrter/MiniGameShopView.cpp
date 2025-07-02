@@ -8,9 +8,9 @@
 // Im using <thread> to save player data in a separate thread after purchase
 #include <thread>
 
-MiniGameShopView::MiniGameShopView(sf::Font& font, Player& player, GameManager& gm)
-    : font(font), playerData(player), gameManager(gm), selectedIndex(0) {
-
+MiniGameShopView::MiniGameShopView(sf::Font& font, Player& player, GameManager* gm)
+    : ShopViewBase(font, player, gm)
+{
     games = {
         { "snake", "Snake", 100 },
         {"catch", "Catch Game", 150 },
@@ -51,9 +51,10 @@ void MiniGameShopView::updateOptionColors() {
 
 void MiniGameShopView::handleInput(sf::Keyboard::Key key) {
     if (key == sf::Keyboard::Escape) {
-        exitRequested = true;
+        closeFlag = true;
         return;
     }
+
 
     if (key == sf::Keyboard::Up || key == sf::Keyboard::W) {
         if (selectedIndex > 0) selectedIndex--;
@@ -89,23 +90,24 @@ void MiniGameShopView::handleInput(sf::Keyboard::Key key) {
 
 
 void MiniGameShopView::render(sf::RenderWindow& window) {
- 
     sf::RectangleShape bg(sf::Vector2f(static_cast<float>(window.getSize().x), static_cast<float>(window.getSize().y)));
     bg.setFillColor(sf::Color(120, 60, 200));
     window.draw(bg);
 
-    gameManager.drawSectionTitle(window, font, "Mini Game Shop");
-    gameManager.drawCoinDisplay(window, font, playerData.coins);
+    gameManager->drawSectionTitle(window, font, "Mini Game Shop");
+    gameManager->drawCoinDisplay(window, font, playerData.coins);
 
     for (const auto& option : gameOptions) {
         window.draw(option);
     }
 }
 
+
 bool MiniGameShopView::shouldClose() const {
-    return exitRequested;
+    return closeFlag;
 }
 
 void MiniGameShopView::resetCloseFlag() {
-    exitRequested = false;
+    closeFlag = false;
 }
+

@@ -8,9 +8,9 @@
 #include <thread>
 
 
-ShelfShopView::ShelfShopView(sf::Font& font, Player& player, GameManager& gm)
-    : font(font), playerData(player), gameManager(&gm), selectedIndex(0) {
-
+ShelfShopView::ShelfShopView(sf::Font& font, Player& player, GameManager* gm)
+    : ShopViewBase(font, player, gm) 
+{
     decorations = {
         {"car",     "Red Toy Car", 20},
         {"books",   "Very Interesting Books",  30},
@@ -49,7 +49,7 @@ void ShelfShopView::init() {
 
 void ShelfShopView::handleInput(sf::Keyboard::Key key) {
     if (key == sf::Keyboard::Escape) {
-        shouldExit = true;
+        closeFlag = true;
         return;
     }
 
@@ -85,7 +85,6 @@ void ShelfShopView::handleInput(sf::Keyboard::Key key) {
     updateOptionColors();
 }
 
-
 void ShelfShopView::updateOptionColors() {
     for (size_t i = 0; i < decorations.size(); ++i) {
         const auto& [id, label, price] = decorations[i];
@@ -104,7 +103,7 @@ void ShelfShopView::updateOptionColors() {
 void ShelfShopView::render(sf::RenderWindow& window) {
     sf::RectangleShape bg(sf::Vector2f(static_cast<float>(window.getSize().x), static_cast<float>(window.getSize().y)));
 
-    bg.setFillColor(sf::Color(120, 60, 200)); 
+    bg.setFillColor(sf::Color(120, 60, 200));
     window.draw(bg);
 
     gameManager->drawSectionTitle(window, font, "Shelf Shop");
@@ -115,9 +114,9 @@ void ShelfShopView::render(sf::RenderWindow& window) {
 }
 
 bool ShelfShopView::shouldClose() const {
-    return shouldExit;
+    return closeFlag; 
 }
 
 void ShelfShopView::resetCloseFlag() {
-    shouldExit = false;
+    closeFlag = false; 
 }

@@ -8,8 +8,8 @@
 #include <thread>
 
 
-HatShopView::HatShopView(sf::Font& font, Player& player, GameManager& gm)
-    : font(font), playerData(player), gameManager(gm)
+HatShopView::HatShopView(sf::Font& font, Player& player, GameManager* gm)
+    : ShopViewBase(font, player, gm)
 {
     hats = {
     {"crown", "Crown", 50},
@@ -37,7 +37,7 @@ void HatShopView::init() {
 
 void HatShopView::handleInput(sf::Keyboard::Key key) {
     if (key == sf::Keyboard::Escape) {
-        shouldExit = true;
+        closeFlag = true;
         return;
     }
 
@@ -93,21 +93,20 @@ void HatShopView::updateOptionColors() {
 
 void HatShopView::render(sf::RenderWindow& window) {
     sf::RectangleShape bg(sf::Vector2f(static_cast<float>(window.getSize().x), static_cast<float>(window.getSize().y)));
-    bg.setFillColor(sf::Color(120, 60, 200)); 
+    bg.setFillColor(sf::Color(120, 60, 200));
     window.draw(bg);
 
-    gameManager.drawSectionTitle(window, font, "Hat Shop");
-    gameManager.drawCoinDisplay(window, font, playerData.coins);
+    gameManager->drawSectionTitle(window, font, "Hat Shop");
+    gameManager->drawCoinDisplay(window, font, playerData.coins);
 
     for (const auto& opt : hatOptions)
         window.draw(opt);
 }
 
-
 bool HatShopView::shouldClose() const {
-    return shouldExit;
+    return closeFlag;
 }
 
 void HatShopView::resetCloseFlag() {
-    shouldExit = false;
+    closeFlag = false;
 }

@@ -9,8 +9,8 @@
 #include <thread>
 
 
-FishTankShopView::FishTankShopView(sf::Font& font, Player& player, GameManager& gm)
-    : font(font), playerData(player), gameManager(gm) {
+FishTankShopView::FishTankShopView(sf::Font& font, Player& player, GameManager* gm)
+    : ShopViewBase(font, player, gm) {
     init();
 }
 
@@ -38,25 +38,23 @@ void FishTankShopView::init() {
 }
 
 void FishTankShopView::render(sf::RenderWindow& window) {
-    // Fill background with purple
     sf::RectangleShape bg(sf::Vector2f(static_cast<float>(window.getSize().x), static_cast<float>(window.getSize().y)));
-    bg.setFillColor(sf::Color(120, 60, 200)); // Pick your favorite purple
+    bg.setFillColor(sf::Color(120, 60, 200));
     window.draw(bg);
 
-    gameManager.drawSectionTitle(window, font, "Fish Tank Shop");
-    gameManager.drawCoinDisplay(window, font, playerData.coins);
+    gameManager->drawSectionTitle(window, font, "Fish Tank Shop");
+    gameManager->drawCoinDisplay(window, font, playerData.coins);
+
     for (const auto& opt : itemTexts)
         window.draw(opt);
-
 }
 
 
 void FishTankShopView::handleInput(sf::Keyboard::Key key) {
     if (key == sf::Keyboard::Escape) {
-        closeRequested = true;
+        closeFlag = true;
         return;
     }
-
     if (key == sf::Keyboard::Up || key == sf::Keyboard::W) {
         if (selectedIndex > 0) selectedIndex--;
     }
@@ -81,10 +79,8 @@ void FishTankShopView::handleInput(sf::Keyboard::Key key) {
             saveThread.detach();
             std::cout << "Bought: " << selectedId << "\n";
             updateOptionColors();
-            if (gameManager.getRoomView())
-                gameManager.getRoomView()->refreshAquariumVisuals();
-
-
+            if (gameManager->getRoomView())
+                gameManager->getRoomView()->refreshAquariumVisuals();
         }
         else {
             std::cout << "Not enough coins\n";
@@ -107,13 +103,9 @@ void FishTankShopView::updateOptionColors() {
 }
 
 bool FishTankShopView::shouldClose() const {
-    return closeRequested;
+    return closeFlag; 
 }
 
 void FishTankShopView::resetCloseFlag() {
-    closeRequested = false;
-}
-
-void FishTankShopView::update() {
-   
+    closeFlag = false; 
 }

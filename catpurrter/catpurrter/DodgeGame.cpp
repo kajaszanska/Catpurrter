@@ -267,12 +267,6 @@ void DodgeGame::drawGame(sf::RenderWindow& window) {
     livesText.setFillColor(sf::Color::Cyan);
     livesText.setPosition(400, 40);
     window.draw(livesText);
-
-    // Coins
-    sf::Text coinsText("Coins: " + std::to_string(player.coins), font, 28);
-    coinsText.setFillColor(sf::Color(255, 255, 100));
-    coinsText.setPosition(600, 40);
-    window.draw(coinsText);
 }
 
 void DodgeGame::drawPause(sf::RenderWindow& window) {
